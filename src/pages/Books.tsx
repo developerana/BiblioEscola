@@ -1,0 +1,288 @@
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { PageHeader } from '@/components/ui/page-header';
+import { SearchInput } from '@/components/ui/search-input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { StatusBadge } from '@/components/ui/status-badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useLibrary } from '@/contexts/LibraryContext';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { Book } from '@/types/library';
+
+export default function Books() {
+  const { books, searchBooks, addBook, updateBook, deleteBook } = useLibrary();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+
+  const filteredBooks = searchBooks(searchQuery, filter);
+
+  const [formData, setFormData] = useState({
+    titulo: '',
+    autor: '',
+    editora: '',
+    categoria: '',
+    quantidade_total: 1,
+  });
+
+  const resetForm = () => {
+    setFormData({
+      titulo: '',
+      autor: '',
+      editora: '',
+      categoria: '',
+      quantidade_total: 1,
+    });
+    setEditingBook(null);
+  };
+
+  const handleOpenDialog = (book?: Book) => {
+    if (book) {
+      setEditingBook(book);
+      setFormData({
+        titulo: book.titulo,
+        autor: book.autor,
+        editora: book.editora,
+        categoria: book.categoria,
+        quantidade_total: book.quantidade_total,
+      });
+    } else {
+      resetForm();
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingBook) {
+      const diff = formData.quantidade_total - editingBook.quantidade_total;
+      updateBook(editingBook.id, {
+        ...formData,
+        quantidade_disponivel: Math.max(0, editingBook.quantidade_disponivel + diff),
+      });
+      toast({
+        title: 'Livro atualizado',
+        description: `"${formData.titulo}" foi atualizado com sucesso.`,
+      });
+    } else {
+      addBook({
+        ...formData,
+        quantidade_disponivel: formData.quantidade_total,
+        data_cadastro: format(new Date(), 'yyyy-MM-dd'),
+      });
+      toast({
+        title: 'Livro cadastrado',
+        description: `"${formData.titulo}" foi adicionado ao acervo.`,
+      });
+    }
+    
+    setIsDialogOpen(false);
+    resetForm();
+  };
+
+  const handleDelete = (book: Book) => {
+    if (book.quantidade_total !== book.quantidade_disponivel) {
+      toast({
+        title: 'Não é possível excluir',
+        description: 'Este livro possui exemplares emprestados.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    deleteBook(book.id);
+    toast({
+      title: 'Livro excluído',
+      description: `"${book.titulo}" foi removido do acervo.`,
+    });
+  };
+
+  return (
+    <MainLayout>
+      <PageHeader title="Livros" description="Gerencie o acervo da biblioteca">
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenDialog()} className="bg-gradient-primary hover:opacity-90">
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Livro
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display">
+                {editingBook ? 'Editar Livro' : 'Cadastrar Novo Livro'}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="titulo">Título</Label>
+                <Input
+                  id="titulo"
+                  value={formData.titulo}
+                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="autor">Autor</Label>
+                <Input
+                  id="autor"
+                  value={formData.autor}
+                  onChange={(e) => setFormData({ ...formData, autor: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="editora">Editora</Label>
+                  <Input
+                    id="editora"
+                    value={formData.editora}
+                    onChange={(e) => setFormData({ ...formData, editora: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria</Label>
+                  <Input
+                    id="categoria"
+                    value={formData.categoria}
+                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantidade">Quantidade Total</Label>
+                <Input
+                  id="quantidade"
+                  type="number"
+                  min={editingBook ? editingBook.quantidade_total - editingBook.quantidade_disponivel : 1}
+                  value={formData.quantidade_total}
+                  onChange={(e) => setFormData({ ...formData, quantidade_total: parseInt(e.target.value) })}
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="flex-1 bg-gradient-primary hover:opacity-90">
+                  {editingBook ? 'Salvar' : 'Cadastrar'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </PageHeader>
+
+      {/* Search and Filters */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Buscar por título ou autor..."
+          className="flex-1 max-w-md"
+        />
+        <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="available">Disponíveis</SelectItem>
+            <SelectItem value="borrowed">Emprestados</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Books Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredBooks.length === 0 ? (
+          <Card className="col-span-full">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Nenhum livro encontrado</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredBooks.map((book, index) => (
+            <Card 
+              key={book.id} 
+              className="shadow-card hover:shadow-card-hover transition-all duration-300 animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display font-semibold text-lg truncate">{book.titulo}</h3>
+                    <p className="text-muted-foreground text-sm">{book.autor}</p>
+                  </div>
+                  <StatusBadge 
+                    status={book.quantidade_disponivel > 0 ? 'disponivel' : 'emprestado'} 
+                  />
+                </div>
+                
+                <div className="space-y-2 text-sm mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Editora</span>
+                    <span className="font-medium">{book.editora}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Categoria</span>
+                    <span className="font-medium">{book.categoria}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Disponíveis</span>
+                    <span className="font-medium">{book.quantidade_disponivel} / {book.quantidade_total}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleOpenDialog(book)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleDelete(book)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </MainLayout>
+  );
+}
