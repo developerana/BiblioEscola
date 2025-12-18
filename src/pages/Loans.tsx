@@ -23,7 +23,8 @@ export default function Loans() {
   const { books, students, createLoan } = useLibrary();
   const { toast } = useToast();
   const [selectedBook, setSelectedBook] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [studentClass, setStudentClass] = useState('');
   const [loanDays, setLoanDays] = useState(14);
 
   const availableBooks = books.filter(book => book.quantidade_disponivel > 0);
@@ -31,14 +32,31 @@ export default function Loans() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedBook || !selectedStudent) {
+    if (!selectedBook || !studentName.trim() || !studentClass.trim()) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Selecione um livro e um aluno.',
+        description: 'Preencha o livro, nome do aluno e turma.',
         variant: 'destructive',
       });
       return;
     }
+
+    // Find student by name and class
+    const foundStudent = students.find(
+      s => s.nome.toLowerCase() === studentName.trim().toLowerCase() && 
+           s.turma.toLowerCase() === studentClass.trim().toLowerCase()
+    );
+
+    if (!foundStudent) {
+      toast({
+        title: 'Aluno não encontrado',
+        description: 'Nenhum aluno encontrado com esse nome e turma.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const selectedStudent = foundStudent.id;
 
     const success = createLoan(selectedBook, selectedStudent, loanDays);
     
@@ -52,7 +70,8 @@ export default function Loans() {
       });
       
       setSelectedBook('');
-      setSelectedStudent('');
+      setStudentName('');
+      setStudentClass('');
       setLoanDays(14);
     } else {
       toast({
@@ -64,7 +83,10 @@ export default function Loans() {
   };
 
   const selectedBookData = books.find(b => b.id === selectedBook);
-  const selectedStudentData = students.find(s => s.id === selectedStudent);
+  const selectedStudentData = students.find(
+    s => s.nome.toLowerCase() === studentName.trim().toLowerCase() && 
+         s.turma.toLowerCase() === studentClass.trim().toLowerCase()
+  );
   const expectedReturnDate = addDays(new Date(), loanDays);
 
   return (
@@ -108,19 +130,25 @@ export default function Loans() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="student">Aluno</Label>
-                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um aluno" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.nome} - {student.turma}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="studentName">Nome do Aluno</Label>
+                <Input
+                  id="studentName"
+                  type="text"
+                  placeholder="Digite o nome do aluno"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="studentClass">Turma</Label>
+                <Input
+                  id="studentClass"
+                  type="text"
+                  placeholder="Digite a turma (ex: 9º A)"
+                  value={studentClass}
+                  onChange={(e) => setStudentClass(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
