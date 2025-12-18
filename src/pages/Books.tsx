@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -27,39 +28,16 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Book } from '@/types/library';
 
-const ITEMS_PER_PAGE = 50;
-
 export default function Books() {
   const { books, searchBooks, addBook, updateBook, deleteBook } = useLibrary();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
 
   const filteredBooks = searchBooks(searchQuery, filter);
-  
-  // Pagination logic
-  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
-  const showPagination = filteredBooks.length >= ITEMS_PER_PAGE;
-  
-  const paginatedBooks = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredBooks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredBooks, currentPage]);
-  
-  // Reset page when filter/search changes
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-  
-  const handleFilterChange = (value: 'all' | 'available' | 'borrowed') => {
-    setFilter(value);
-    setCurrentPage(1);
-  };
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -226,11 +204,11 @@ export default function Books() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
           <SearchInput
             value={searchQuery}
-            onChange={handleSearchChange}
+            onChange={setSearchQuery}
             placeholder="Buscar por título ou autor..."
             className="flex-1 max-w-md"
           />
-          <Select value={filter} onValueChange={(v) => handleFilterChange(v as typeof filter)}>
+          <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
@@ -274,7 +252,7 @@ export default function Books() {
       ) : viewMode === 'grid' ? (
         /* Grid View */
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {paginatedBooks.map((book, index) => (
+          {filteredBooks.map((book, index) => (
             <Card 
               key={book.id} 
               className="shadow-card hover:shadow-card-hover transition-all duration-300 animate-fade-in"
@@ -334,7 +312,7 @@ export default function Books() {
         <Card className="shadow-card">
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {paginatedBooks.map((book, index) => (
+              {filteredBooks.map((book, index) => (
                 <div 
                   key={book.id} 
                   className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors animate-fade-in"
@@ -381,38 +359,6 @@ export default function Books() {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Pagination Controls */}
-      {showPagination && (
-        <div className="mt-6 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredBooks.length)} de {filteredBooks.length} livros
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
-            </Button>
-            <span className="text-sm font-medium px-3">
-              Página {currentPage} de {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Próxima
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </div>
       )}
     </MainLayout>
   );
