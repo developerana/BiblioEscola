@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users as UsersIcon, Trash2 } from 'lucide-react';
+import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, MoreHorizontal } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +22,7 @@ interface UserProfile {
   email: string;
   name: string | null;
   created_at: string;
+  is_active: boolean;
   role?: 'admin' | 'user';
 }
 
@@ -30,6 +33,8 @@ export default function Users() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', name: '' });
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -64,17 +69,17 @@ export default function Users() {
       return;
     }
 
-    // Fetch roles for each user
     const usersWithRoles = await Promise.all(
       (profiles || []).map(async (profile) => {
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', profile.user_id)
-          .single();
+          .maybeSingle();
         
         return {
           ...profile,
+          is_active: profile.is_active ?? true,
           role: roleData?.role as 'admin' | 'user' || 'user',
         };
       })
@@ -128,6 +133,44 @@ export default function Users() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUserAction = async (userId: string, action: 'activate' | 'deactivate' | 'delete') => {
+    setActionLoading(userId);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { userId, action },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const messages = {
+        activate: 'Usuário ativado com sucesso',
+        deactivate: 'Usuário desativado com sucesso',
+        delete: 'Usuário excluído com sucesso',
+      };
+
+      toast({
+        title: 'Sucesso',
+        description: messages[action],
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Ocorreu um erro ao processar a ação.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+      setDeleteConfirm(null);
     }
   };
 
@@ -217,12 +260,14 @@ export default function Users() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Tipo</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Data de Cadastro</TableHead>
+                    <TableHead className="w-[70px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((userItem) => (
-                    <TableRow key={userItem.id}>
+                    <TableRow key={userItem.id} className={!userItem.is_active ? 'opacity-60' : ''}>
                       <TableCell className="font-medium">
                         {userItem.name || '-'}
                       </TableCell>
@@ -233,7 +278,53 @@ export default function Users() {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Badge variant={userItem.is_active ? 'outline' : 'destructive'}>
+                          {userItem.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         {new Date(userItem.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        {userItem.role !== 'admin' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                disabled={actionLoading === userItem.user_id}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {userItem.is_active ? (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
+                                  className="text-warning"
+                                >
+                                  <UserX className="h-4 w-4 mr-2" />
+                                  Desativar
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserAction(userItem.user_id, 'activate')}
+                                  className="text-success"
+                                >
+                                  <UserCheck className="h-4 w-4 mr-2" />
+                                  Ativar
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => setDeleteConfirm(userItem)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -254,9 +345,31 @@ export default function Users() {
             <p>• A senha padrão para novos usuários é: <strong>{DEFAULT_PASSWORD}</strong></p>
             <p>• Os usuários devem alterar a senha após o primeiro login.</p>
             <p>• Apenas administradores podem cadastrar novos usuários.</p>
+            <p>• Usuários desativados não conseguem fazer login no sistema.</p>
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o usuário <strong>{deleteConfirm?.email}</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirm && handleUserAction(deleteConfirm.user_id, 'delete')}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }
