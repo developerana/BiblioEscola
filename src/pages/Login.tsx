@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import libraryBackground from '@/assets/library-background.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -77,8 +78,18 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-warm flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-scale-in">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${libraryBackground})` }}
+      />
+      
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md animate-scale-in">
         {/* Logo Section */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg">
@@ -89,7 +100,7 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <Card className="border-border/50 shadow-card">
+        <Card className="border-border/50 bg-card/95 backdrop-blur-sm shadow-2xl">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="font-display text-2xl text-center">Entrar</CardTitle>
             <CardDescription className="text-center">
