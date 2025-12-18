@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ export default function Books() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
 
@@ -198,36 +200,59 @@ export default function Books() {
       </PageHeader>
 
       {/* Search and Filters */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Buscar por título ou autor..."
-          className="flex-1 max-w-md"
-        />
-        <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="available">Disponíveis</SelectItem>
-            <SelectItem value="borrowed">Emprestados</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Buscar por título ou autor..."
+            className="flex-1 max-w-md"
+          />
+          <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="available">Disponíveis</SelectItem>
+              <SelectItem value="borrowed">Emprestados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* View Mode Toggle */}
+        <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+            className={viewMode === 'list' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+            className={viewMode === 'grid' ? 'bg-primary text-primary-foreground' : ''}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Books Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredBooks.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Nenhum livro encontrado</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredBooks.map((book, index) => (
+      {/* Books Display */}
+      {filteredBooks.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Nenhum livro encontrado</p>
+          </CardContent>
+        </Card>
+      ) : viewMode === 'grid' ? (
+        /* Grid View */
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredBooks.map((book, index) => (
             <Card 
               key={book.id} 
               className="shadow-card hover:shadow-card-hover transition-all duration-300 animate-fade-in"
@@ -280,9 +305,61 @@ export default function Books() {
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        /* List View */
+        <Card className="shadow-card">
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {filteredBooks.map((book, index) => (
+                <div 
+                  key={book.id} 
+                  className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors animate-fade-in"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display font-semibold truncate">{book.titulo}</h3>
+                      <p className="text-muted-foreground text-sm">{book.autor} • {book.editora}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="text-right hidden sm:block">
+                      <p className="text-sm font-medium">{book.quantidade_disponivel} / {book.quantidade_total}</p>
+                      <p className="text-xs text-muted-foreground">disponíveis</p>
+                    </div>
+                    <StatusBadge 
+                      status={book.quantidade_disponivel > 0 ? 'disponivel' : 'emprestado'} 
+                    />
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenDialog(book)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(book)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </MainLayout>
   );
 }
