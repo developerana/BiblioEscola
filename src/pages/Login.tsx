@@ -47,7 +47,7 @@ export default function Login() {
             <Library className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="font-display text-3xl font-bold text-foreground">BiblioEscola</h1>
-          <p className="mt-2 text-muted-foreground">Sistema de Controle Bibliotecário</p>
+          <p className="mt-2 text-muted-foreground">Profª Laís Peralta Carneiro</p>
         </div>
 
         {/* Login Card */}
