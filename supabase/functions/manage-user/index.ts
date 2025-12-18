@@ -16,39 +16,54 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+    // Create admin client for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify admin authorization
+    // Verify admin authorization using anon key client
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("No authorization header provided");
       return new Response(
         JSON.stringify({ error: "Não autorizado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    // Create a client with the user's token to verify their identity
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
 
-    if (userError || !userData.user) {
+    // Get the authenticated user
+    const { data: { user: callerUser }, error: userError } = await supabaseClient.auth.getUser();
+
+    if (userError || !callerUser) {
+      console.log("User verification error:", userError?.message);
       return new Response(
         JSON.stringify({ error: "Token inválido" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Check if caller is admin
-    const callerEmail = userData.user.email;
+    console.log("Caller user verified:", callerUser.email);
+
+    // Check if caller is admin using admin client
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", userData.user.id)
+      .eq("user_id", callerUser.id)
       .single();
 
-    const isAdmin = callerEmail === ADMIN_EMAIL || roleData?.role === "admin";
+    const isAdmin = callerUser.email === ADMIN_EMAIL || roleData?.role === "admin";
 
     if (!isAdmin) {
+      console.log("User is not admin:", callerUser.email);
       return new Response(
         JSON.stringify({ error: "Apenas administradores podem gerenciar usuários" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -65,15 +80,16 @@ serve(async (req) => {
     }
 
     // Prevent admin from modifying themselves
-    if (userId === userData.user.id) {
+    if (userId === callerUser.id) {
       return new Response(
         JSON.stringify({ error: "Você não pode modificar sua própria conta" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Executing action:", action, "for user:", userId);
+
     if (action === "deactivate") {
-      // Update is_active to false in profiles
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
         .update({ is_active: false })
@@ -114,7 +130,6 @@ serve(async (req) => {
     }
 
     if (action === "delete") {
-      // Delete from auth (this will cascade to profiles due to the trigger or we delete manually)
       const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
       if (deleteAuthError) {
