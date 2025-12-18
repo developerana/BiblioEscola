@@ -33,7 +33,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-display text-lg font-semibold">BiblioEscola</h1>
-            <p className="text-xs text-sidebar-foreground/70">Sistema Bibliotecário</p>
+            <p className="text-xs text-sidebar-foreground/70">Profª Laís Peralta Carneiro</p>
           </div>
         </div>
 
