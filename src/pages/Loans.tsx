@@ -50,7 +50,7 @@ export default function Loans() {
     if (!foundStudent) {
       toast({
         title: 'Aluno não encontrado',
-        description: 'Nenhum aluno encontrado com esse nome e turma.',
+        description: `Nenhum aluno "${studentName.trim()}" da turma "${studentClass.trim()}" encontrado.`,
         variant: 'destructive',
       });
       return;
