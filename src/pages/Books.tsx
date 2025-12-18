@@ -35,12 +35,26 @@ export default function Books() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
+  const [sortOrder, setSortOrder] = useState<'a-z' | 'z-a' | 'author-a-z' | 'author-z-a'>('a-z');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredBooks = searchBooks(searchQuery, filter);
+  const filteredBooks = searchBooks(searchQuery, filter).sort((a, b) => {
+    switch (sortOrder) {
+      case 'a-z':
+        return a.titulo.localeCompare(b.titulo);
+      case 'z-a':
+        return b.titulo.localeCompare(a.titulo);
+      case 'author-a-z':
+        return a.autor.localeCompare(b.autor);
+      case 'author-z-a':
+        return b.autor.localeCompare(a.autor);
+      default:
+        return 0;
+    }
+  });
   const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
   const paginatedBooks = filteredBooks.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -50,7 +64,7 @@ export default function Books() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filter]);
+  }, [searchQuery, filter, sortOrder]);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -229,6 +243,17 @@ export default function Books() {
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="available">Disponíveis</SelectItem>
               <SelectItem value="borrowed">Emprestados</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="a-z">Título (A-Z)</SelectItem>
+              <SelectItem value="z-a">Título (Z-A)</SelectItem>
+              <SelectItem value="author-a-z">Autor (A-Z)</SelectItem>
+              <SelectItem value="author-z-a">Autor (Z-A)</SelectItem>
             </SelectContent>
           </Select>
         </div>
