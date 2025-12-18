@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import libraryBackground from '@/assets/library-background.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -77,29 +78,40 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-warm flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-scale-in">
-        {/* Logo Section */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg">
-            <Library className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-foreground">BiblioEscola</h1>
-          <p className="mt-2 text-muted-foreground">Profª Laís Peralta Carneiro</p>
-        </div>
-
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${libraryBackground})` }}
+      />
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md animate-scale-in">
         {/* Login Card */}
-        <Card className="border-border/50 shadow-card">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="font-display text-2xl text-center">Entrar</CardTitle>
-            <CardDescription className="text-center">
-              Digite suas credenciais para acessar o sistema
-            </CardDescription>
+        <Card className="border-border/30 bg-card/95 backdrop-blur-md shadow-2xl">
+          <CardHeader className="space-y-4 pb-6 pt-8">
+            {/* Logo */}
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg">
+              <Library className="h-8 w-8 text-primary-foreground" />
+            </div>
+            
+            <div className="space-y-1 text-center">
+              <CardTitle className="font-display text-3xl font-bold text-foreground">
+                BiblioEscola
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Profª Laís Peralta Carneiro
+              </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          
+          <CardContent className="pb-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email" className="text-foreground/90">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
@@ -107,11 +119,12 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password" className="text-foreground/90">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -120,27 +133,31 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11 pr-10"
+                    className="h-12 pr-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
+              
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-gradient-primary hover:opacity-90 transition-opacity gap-2" 
+                className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-all duration-200 gap-2 text-base font-medium shadow-lg hover:shadow-xl" 
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  'Entrando...'
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Entrando...
+                  </span>
                 ) : (
                   <>
-                    <LogIn className="h-4 w-4" />
+                    <LogIn className="h-5 w-5" />
                     Entrar
                   </>
                 )}
