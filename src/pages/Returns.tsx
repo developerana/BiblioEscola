@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Undo2, Search, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Undo2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
@@ -17,7 +17,6 @@ import {
 import { useLibrary } from '@/contexts/LibraryContext';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export default function Returns() {
   const { getLoanHistory, returnBook, getActiveLoan } = useLibrary();
@@ -30,8 +29,8 @@ export default function Returns() {
 
   const filteredLoans = activeLoans.filter(loan =>
     loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loan.aluno?.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loan.aluno?.matricula.includes(searchQuery)
+    loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleReturn = (loanId: string) => {
@@ -65,7 +64,7 @@ export default function Returns() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Buscar por título, aluno ou matrícula..."
+          placeholder="Buscar por título, aluno ou turma..."
           className="max-w-md"
         />
       </div>
@@ -111,9 +110,9 @@ export default function Returns() {
 
                   <div className="space-y-3 mb-4">
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-sm font-medium">{loan.aluno?.nome}</p>
+                      <p className="text-sm font-medium">{loan.aluno_nome}</p>
                       <p className="text-xs text-muted-foreground">
-                        {loan.aluno?.matricula} • {loan.aluno?.turma}
+                        Turma: {loan.aluno_turma}
                       </p>
                     </div>
 
@@ -179,9 +178,9 @@ export default function Returns() {
               </div>
               
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-medium mb-2">{selectedLoan.aluno?.nome}</h4>
+                <h4 className="font-medium mb-2">{selectedLoan.aluno_nome}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {selectedLoan.aluno?.matricula} • {selectedLoan.aluno?.turma}
+                  Turma: {selectedLoan.aluno_turma}
                 </p>
               </div>
 

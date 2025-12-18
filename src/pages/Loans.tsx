@@ -20,7 +20,7 @@ import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Loans() {
-  const { books, students, createLoan } = useLibrary();
+  const { books, createLoan } = useLibrary();
   const { toast } = useToast();
   const [selectedBook, setSelectedBook] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -41,32 +41,14 @@ export default function Loans() {
       return;
     }
 
-    // Find student by name and class
-    const foundStudent = students.find(
-      s => s.nome.toLowerCase() === studentName.trim().toLowerCase() && 
-           s.turma.toLowerCase() === studentClass.trim().toLowerCase()
-    );
-
-    if (!foundStudent) {
-      toast({
-        title: 'Aluno não encontrado',
-        description: `Nenhum aluno "${studentName.trim()}" da turma "${studentClass.trim()}" encontrado.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const selectedStudent = foundStudent.id;
-
-    const success = createLoan(selectedBook, selectedStudent, loanDays);
+    const success = createLoan(selectedBook, studentName.trim(), studentClass.trim(), loanDays);
     
     if (success) {
       const book = books.find(b => b.id === selectedBook);
-      const student = students.find(s => s.id === selectedStudent);
       
       toast({
         title: 'Empréstimo registrado',
-        description: `"${book?.titulo}" emprestado para ${student?.nome}.`,
+        description: `"${book?.titulo}" emprestado para ${studentName.trim()}.`,
       });
       
       setSelectedBook('');
@@ -83,10 +65,6 @@ export default function Loans() {
   };
 
   const selectedBookData = books.find(b => b.id === selectedBook);
-  const selectedStudentData = students.find(
-    s => s.nome.toLowerCase() === studentName.trim().toLowerCase() && 
-         s.turma.toLowerCase() === studentClass.trim().toLowerCase()
-  );
   const expectedReturnDate = addDays(new Date(), loanDays);
 
   return (

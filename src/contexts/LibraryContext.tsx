@@ -1,18 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Book, Student, Loan, DashboardStats } from '@/types/library';
+import { Book, Loan, DashboardStats } from '@/types/library';
 import { format, addDays, isBefore, parseISO } from 'date-fns';
 
 interface LibraryContextType {
   books: Book[];
-  students: Student[];
   loans: Loan[];
   addBook: (book: Omit<Book, 'id' | 'created_at'>) => void;
   updateBook: (id: string, book: Partial<Book>) => void;
   deleteBook: (id: string) => void;
-  addStudent: (student: Omit<Student, 'id' | 'created_at'>) => void;
-  updateStudent: (id: string, student: Partial<Student>) => void;
-  deleteStudent: (id: string) => void;
-  createLoan: (livroId: string, alunoId: string, diasEmprestimo: number) => boolean;
+  createLoan: (livroId: string, alunoNome: string, alunoTurma: string, diasEmprestimo: number) => boolean;
   returnBook: (loanId: string) => boolean;
   getDashboardStats: () => DashboardStats;
   searchBooks: (query: string, filter?: 'all' | 'available' | 'borrowed') => Book[];
@@ -66,18 +62,12 @@ const initialBooks: Book[] = [
   },
 ];
 
-const initialStudents: Student[] = [
-  { id: '1', nome: 'Ana Silva', matricula: '2024001', turma: '9º A' },
-  { id: '2', nome: 'Pedro Santos', matricula: '2024002', turma: '8º B' },
-  { id: '3', nome: 'Maria Oliveira', matricula: '2024003', turma: '7º A' },
-  { id: '4', nome: 'João Costa', matricula: '2024004', turma: '9º B' },
-];
-
 const initialLoans: Loan[] = [
   {
     id: '1',
     livro_id: '1',
-    aluno_id: '1',
+    aluno_nome: 'Ana Silva',
+    aluno_turma: '9º A',
     data_emprestimo: '2024-12-01',
     data_prevista_devolucao: '2024-12-15',
     data_devolucao: null,
@@ -86,7 +76,8 @@ const initialLoans: Loan[] = [
   {
     id: '2',
     livro_id: '1',
-    aluno_id: '2',
+    aluno_nome: 'Pedro Santos',
+    aluno_turma: '8º B',
     data_emprestimo: '2024-12-10',
     data_prevista_devolucao: '2024-12-24',
     data_devolucao: null,
@@ -95,7 +86,8 @@ const initialLoans: Loan[] = [
   {
     id: '3',
     livro_id: '3',
-    aluno_id: '3',
+    aluno_nome: 'Maria Oliveira',
+    aluno_turma: '7º A',
     data_emprestimo: '2024-11-15',
     data_prevista_devolucao: '2024-11-29',
     data_devolucao: '2024-11-28',
@@ -104,7 +96,8 @@ const initialLoans: Loan[] = [
   {
     id: '4',
     livro_id: '3',
-    aluno_id: '4',
+    aluno_nome: 'João Costa',
+    aluno_turma: '9º B',
     data_emprestimo: '2024-12-05',
     data_prevista_devolucao: '2024-12-19',
     data_devolucao: null,
@@ -114,7 +107,6 @@ const initialLoans: Loan[] = [
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const [books, setBooks] = useState<Book[]>(initialBooks);
-  const [students, setStudents] = useState<Student[]>(initialStudents);
   const [loans, setLoans] = useState<Loan[]>(initialLoans);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -138,26 +130,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setBooks(prev => prev.filter(book => book.id !== id));
   }, []);
 
-  const addStudent = useCallback((student: Omit<Student, 'id' | 'created_at'>) => {
-    const newStudent: Student = {
-      ...student,
-      id: generateId(),
-      created_at: new Date().toISOString(),
-    };
-    setStudents(prev => [...prev, newStudent]);
-  }, []);
-
-  const updateStudent = useCallback((id: string, updates: Partial<Student>) => {
-    setStudents(prev => prev.map(student => 
-      student.id === id ? { ...student, ...updates } : student
-    ));
-  }, []);
-
-  const deleteStudent = useCallback((id: string) => {
-    setStudents(prev => prev.filter(student => student.id !== id));
-  }, []);
-
-  const createLoan = useCallback((livroId: string, alunoId: string, diasEmprestimo: number): boolean => {
+  const createLoan = useCallback((livroId: string, alunoNome: string, alunoTurma: string, diasEmprestimo: number): boolean => {
     const book = books.find(b => b.id === livroId);
     if (!book || book.quantidade_disponivel <= 0) return false;
 
@@ -165,7 +138,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     const newLoan: Loan = {
       id: generateId(),
       livro_id: livroId,
-      aluno_id: alunoId,
+      aluno_nome: alunoNome,
+      aluno_turma: alunoTurma,
       data_emprestimo: format(today, 'yyyy-MM-dd'),
       data_prevista_devolucao: format(addDays(today, diasEmprestimo), 'yyyy-MM-dd'),
       data_devolucao: null,
@@ -217,9 +191,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       livrosDisponiveis: books.reduce((acc, b) => acc + b.quantidade_disponivel, 0),
       livrosEmprestados: totalBorrowed,
       emprestimosAtrasados: overdueLoans.length,
-      totalAlunos: students.length,
     };
-  }, [books, loans, students]);
+  }, [books, loans]);
 
   const searchBooks = useCallback((query: string, filter: 'all' | 'available' | 'borrowed' = 'all'): Book[] => {
     let filtered = books;
@@ -246,7 +219,6 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     
     return loans.map(loan => {
       const livro = books.find(b => b.id === loan.livro_id);
-      const aluno = students.find(s => s.id === loan.aluno_id);
       
       let status = loan.status;
       if (!loan.data_devolucao && isBefore(parseISO(loan.data_prevista_devolucao), today)) {
@@ -257,10 +229,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         ...loan,
         status,
         livro,
-        aluno,
       };
     }).sort((a, b) => new Date(b.data_emprestimo).getTime() - new Date(a.data_emprestimo).getTime());
-  }, [loans, books, students]);
+  }, [loans, books]);
 
   const getActiveLoan = useCallback((loanId: string): Loan | undefined => {
     const loan = loans.find(l => l.id === loanId);
@@ -269,21 +240,16 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     return {
       ...loan,
       livro: books.find(b => b.id === loan.livro_id),
-      aluno: students.find(s => s.id === loan.aluno_id),
     };
-  }, [loans, books, students]);
+  }, [loans, books]);
 
   return (
     <LibraryContext.Provider value={{
       books,
-      students,
       loans,
       addBook,
       updateBook,
       deleteBook,
-      addStudent,
-      updateStudent,
-      deleteStudent,
       createLoan,
       returnBook,
       getDashboardStats,

@@ -2,7 +2,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BookOpen, 
-  Users, 
   BookPlus, 
   Undo2, 
   History, 
@@ -14,7 +13,6 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/livros', icon: BookOpen, label: 'Livros' },
-  { to: '/alunos', icon: Users, label: 'Alunos' },
   { to: '/emprestimos', icon: BookPlus, label: 'Empréstimos' },
   { to: '/devolucoes', icon: Undo2, label: 'Devoluções' },
   { to: '/historico', icon: History, label: 'Histórico' },
