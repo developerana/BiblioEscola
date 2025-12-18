@@ -64,7 +64,7 @@ export function Sidebar() {
         <div className="border-t border-sidebar-border p-4">
           <NavLink
             to="/"
-            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-destructive/20 hover:text-destructive"
           >
             <LogOut className="h-5 w-5" />
             Sair
