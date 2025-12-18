@@ -195,7 +195,7 @@ export default function Loans() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedBookData || selectedStudentData ? (
+            {selectedBookData || studentName.trim() || studentClass.trim() ? (
               <div className="space-y-6">
                 {selectedBookData && (
                   <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -209,13 +209,12 @@ export default function Loans() {
                   </div>
                 )}
 
-                {selectedStudentData && (
+                {(studentName.trim() || studentClass.trim()) && (
                   <div className="rounded-lg border border-border bg-muted/30 p-4">
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Aluno Selecionado</h4>
-                    <p className="font-display text-lg font-semibold">{selectedStudentData.nome}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Aluno</h4>
+                    <p className="font-display text-lg font-semibold">{studentName.trim() || '—'}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      <span>Matrícula: {selectedStudentData.matricula}</span>
-                      <span>Turma: {selectedStudentData.turma}</span>
+                      <span>Turma: {studentClass.trim() || '—'}</span>
                     </div>
                   </div>
                 )}
