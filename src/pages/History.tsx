@@ -35,8 +35,8 @@ export default function History() {
   const filteredLoans = allLoans.filter(loan => {
     const matchesSearch = 
       loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno?.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno?.matricula.includes(searchQuery);
+      loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
 
@@ -66,7 +66,7 @@ export default function History() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Buscar por título, aluno ou matrícula..."
+          placeholder="Buscar por título, aluno ou turma..."
           className="flex-1 max-w-md"
         />
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
@@ -118,12 +118,9 @@ export default function History() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div>
-                            <p className="font-medium">{loan.aluno?.nome || '-'}</p>
-                            <p className="text-sm text-muted-foreground">{loan.aluno?.matricula}</p>
-                          </div>
+                          <p className="font-medium">{loan.aluno_nome}</p>
                         </TableCell>
-                        <TableCell>{loan.aluno?.turma || '-'}</TableCell>
+                        <TableCell>{loan.aluno_turma}</TableCell>
                         <TableCell>
                           {format(parseISO(loan.data_emprestimo), "dd 'de' MMM", { locale: ptBR })}
                         </TableCell>

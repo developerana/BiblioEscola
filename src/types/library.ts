@@ -10,18 +10,12 @@ export interface Book {
   created_at?: string;
 }
 
-export interface Student {
-  id: string;
-  nome: string;
-  matricula: string;
-  turma: string;
-  created_at?: string;
-}
 
 export interface Loan {
   id: string;
   livro_id: string;
-  aluno_id: string;
+  aluno_nome: string;
+  aluno_turma: string;
   data_emprestimo: string;
   data_prevista_devolucao: string;
   data_devolucao: string | null;
@@ -29,7 +23,6 @@ export interface Loan {
   created_at?: string;
   // Joined fields
   livro?: Book;
-  aluno?: Student;
 }
 
 export interface DashboardStats {
@@ -37,5 +30,4 @@ export interface DashboardStats {
   livrosDisponiveis: number;
   livrosEmprestados: number;
   emprestimosAtrasados: number;
-  totalAlunos: number;
 }

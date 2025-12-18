@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Books from "./pages/Books";
-import Students from "./pages/Students";
 import Loans from "./pages/Loans";
 import Returns from "./pages/Returns";
 import History from "./pages/History";
@@ -28,7 +27,6 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/livros" element={<Books />} />
-            <Route path="/alunos" element={<Students />} />
             <Route path="/emprestimos" element={<Loans />} />
             <Route path="/devolucoes" element={<Returns />} />
             <Route path="/historico" element={<History />} />
