@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen, LayoutGrid, List, ChevronLeft, ChevronRight, ArrowDownAZ, ArrowUpZA } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
@@ -35,14 +35,22 @@ export default function Books() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
+  const [sortOrder, setSortOrder] = useState<'default' | 'az' | 'za'>('default');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredBooks = searchBooks(searchQuery, filter);
-  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
-  const paginatedBooks = filteredBooks.slice(
+  
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    if (sortOrder === 'az') return a.titulo.localeCompare(b.titulo, 'pt-BR');
+    if (sortOrder === 'za') return b.titulo.localeCompare(a.titulo, 'pt-BR');
+    return 0;
+  });
+  
+  const totalPages = Math.ceil(sortedBooks.length / ITEMS_PER_PAGE);
+  const paginatedBooks = sortedBooks.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -50,7 +58,7 @@ export default function Books() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filter]);
+  }, [searchQuery, filter, sortOrder]);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -231,6 +239,26 @@ export default function Books() {
               <SelectItem value="borrowed">Emprestados</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Ordenar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Ordem padrão</SelectItem>
+              <SelectItem value="az">
+                <span className="flex items-center gap-2">
+                  <ArrowDownAZ className="h-4 w-4" />
+                  A-Z
+                </span>
+              </SelectItem>
+              <SelectItem value="za">
+                <span className="flex items-center gap-2">
+                  <ArrowUpZA className="h-4 w-4" />
+                  Z-A
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         {/* View Mode Toggle */}
@@ -255,7 +283,7 @@ export default function Books() {
       </div>
 
       {/* Books Display */}
-      {filteredBooks.length === 0 ? (
+      {sortedBooks.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
