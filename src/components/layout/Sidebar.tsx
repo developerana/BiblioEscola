@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -6,9 +7,12 @@ import {
   Undo2, 
   History, 
   LogOut,
-  Library
+  Library,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -20,6 +24,11 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground">
@@ -61,7 +70,19 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-sidebar-border p-4">
+        <div className="border-t border-sidebar-border p-4 space-y-2">
+          <Button
+            variant="ghost"
+            onClick={toggleTheme}
+            className="w-full justify-start gap-3 px-4 py-3 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+            {theme === 'dark' ? 'Tema Claro' : 'Tema Escuro'}
+          </Button>
           <NavLink
             to="/"
             className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-destructive/20 hover:text-destructive"
