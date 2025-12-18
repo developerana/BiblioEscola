@@ -64,7 +64,6 @@ export default function Books() {
     titulo: '',
     autor: '',
     editora: '',
-    categoria: '',
     quantidade_total: 1,
   });
 
@@ -73,7 +72,6 @@ export default function Books() {
       titulo: '',
       autor: '',
       editora: '',
-      categoria: '',
       quantidade_total: 1,
     });
     setEditingBook(null);
@@ -86,7 +84,6 @@ export default function Books() {
         titulo: book.titulo,
         autor: book.autor,
         editora: book.editora,
-        categoria: book.categoria,
         quantidade_total: book.quantidade_total,
       });
     } else {
@@ -111,6 +108,7 @@ export default function Books() {
     } else {
       addBook({
         ...formData,
+        categoria: '',
         quantidade_disponivel: formData.quantidade_total,
         data_cadastro: format(new Date(), 'yyyy-MM-dd'),
       });
@@ -183,15 +181,6 @@ export default function Books() {
                     id="editora"
                     value={formData.editora}
                     onChange={(e) => setFormData({ ...formData, editora: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="categoria">Categoria</Label>
-                  <Input
-                    id="categoria"
-                    value={formData.categoria}
-                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                     required
                   />
                 </div>
@@ -314,10 +303,6 @@ export default function Books() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Editora</span>
                     <span className="font-medium">{book.editora}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Categoria</span>
-                    <span className="font-medium">{book.categoria}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Disponíveis</span>
