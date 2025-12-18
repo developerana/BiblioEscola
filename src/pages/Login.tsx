@@ -1,42 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Library, Eye, EyeOff } from 'lucide-react';
+import { Library, Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Por favor, preencha email e senha.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulated login - replace with actual auth
-    setTimeout(() => {
-      if (email && password) {
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        let message = 'Erro ao fazer login. Tente novamente.';
+        if (error.message.includes('Invalid login credentials')) {
+          message = 'Email ou senha inválidos.';
+        }
         toast({
-          title: 'Login realizado com sucesso!',
-          description: 'Bem-vindo ao BiblioEscola.',
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: 'Erro no login',
-          description: 'Por favor, preencha todos os campos.',
+          title: 'Erro de autenticação',
+          description: message,
           variant: 'destructive',
         });
+      } else {
+        toast({
+          title: 'Bem-vindo!',
+          description: 'Login realizado com sucesso.',
+        });
+        navigate('/dashboard');
       }
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro inesperado.',
+        variant: 'destructive',
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-warm flex items-center justify-center p-4">
@@ -95,19 +133,21 @@ export default function Login() {
               </div>
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-gradient-primary hover:opacity-90 transition-opacity" 
+                className="w-full h-11 bg-gradient-primary hover:opacity-90 transition-opacity gap-2" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Entrando...' : 'Entrar'}
+                {isLoading ? (
+                  'Entrando...'
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4" />
+                    Entrar
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
-
-        {/* Demo credentials hint */}
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Use qualquer e-mail e senha para acessar
-        </p>
       </div>
     </div>
   );
