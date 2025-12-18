@@ -1,1 +1,7 @@
 project_id = "ofgifhuyzwymgcvrhszu"
+
+[functions.register-user]
+verify_jwt = true
+
+[functions.init-admin]
+verify_jwt = false
