@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import libraryBackground from '@/assets/library-background.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -77,19 +78,29 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-warm flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-scale-in">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${libraryBackground})` }}
+      />
+      
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+      
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-md animate-scale-in">
         {/* Logo Section */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary shadow-lg">
-            <Library className="h-8 w-8 text-primary-foreground" />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/90 shadow-2xl backdrop-blur-sm">
+            <Library className="h-10 w-10 text-primary-foreground" />
           </div>
-          <h1 className="font-display text-3xl font-bold text-foreground">BiblioEscola</h1>
-          <p className="mt-2 text-muted-foreground">Profª Laís Peralta Carneiro</p>
+          <h1 className="font-display text-4xl font-bold text-white drop-shadow-lg">BiblioEscola</h1>
+          <p className="mt-2 text-white/80 text-lg drop-shadow">Profª Laís Peralta Carneiro</p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-border/50 shadow-card">
+        <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-md">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="font-display text-2xl text-center">Entrar</CardTitle>
             <CardDescription className="text-center">
@@ -133,7 +144,7 @@ export default function Login() {
               </div>
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-gradient-primary hover:opacity-90 transition-opacity gap-2" 
+                className="w-full h-11 bg-primary hover:bg-primary/90 transition-all gap-2 shadow-lg" 
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -148,6 +159,11 @@ export default function Login() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-white/60 text-sm">
+          Sistema de Gerenciamento de Biblioteca Escolar
+        </p>
       </div>
     </div>
   );
