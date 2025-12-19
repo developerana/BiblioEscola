@@ -121,22 +121,47 @@ serve(async (req) => {
     }
 
     if (action === "delete") {
+      console.log("Deleting all user data for userId:", userId);
+
+      // First, delete from user_roles table
+      const { error: rolesError } = await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+      
+      if (rolesError) {
+        console.error("Error deleting user roles:", rolesError);
+      } else {
+        console.log("User roles deleted successfully");
+      }
+
+      // Then, delete from profiles table
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .delete()
+        .eq("user_id", userId);
+      
+      if (profileError) {
+        console.error("Error deleting profile:", profileError);
+      } else {
+        console.log("User profile deleted successfully");
+      }
+
+      // Finally, delete the auth user (this will cascade delete any remaining references)
       const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
       if (deleteAuthError) {
         console.error("Error deleting auth user:", deleteAuthError);
         return new Response(
-          JSON.stringify({ error: "Erro ao excluir usuário" }),
+          JSON.stringify({ error: "Erro ao excluir usuário do sistema de autenticação" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Also delete from profiles and user_roles
-      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-      await supabaseAdmin.from("profiles").delete().eq("user_id", userId);
+      console.log("Auth user deleted successfully");
 
       return new Response(
-        JSON.stringify({ success: true, message: "Usuário excluído" }),
+        JSON.stringify({ success: true, message: "Usuário e todos os seus dados foram excluídos com sucesso" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
