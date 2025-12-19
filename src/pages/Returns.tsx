@@ -27,11 +27,13 @@ export default function Returns() {
   const activeLoans = getLoanHistory().filter(loan => !loan.data_devolucao);
   const today = new Date();
 
-  const filteredLoans = activeLoans.filter(loan =>
-    loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredLoans = activeLoans
+    .filter(loan =>
+      loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => parseISO(a.data_emprestimo).getTime() - parseISO(b.data_emprestimo).getTime());
 
   const handleReturn = (loanId: string) => {
     const success = returnBook(loanId);
