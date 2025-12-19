@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'admin' | 'user' | null;
+type AppRole = 'admin' | 'bibliotecario' | 'user' | null;
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole;
   isAdmin: boolean;
+  canManageBooks: boolean; // Can edit/delete books (admin + bibliotecario)
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isAdmin = role === 'admin' || user?.email === ADMIN_EMAIL;
+  const canManageBooks = isAdmin || role === 'bibliotecario';
 
   return (
     <AuthContext.Provider value={{ 
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session, 
       role, 
       isAdmin,
+      canManageBooks,
       loading, 
       signIn, 
       signOut 
