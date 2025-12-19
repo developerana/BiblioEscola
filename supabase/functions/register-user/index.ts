@@ -8,6 +8,30 @@ const corsHeaders = {
 
 const ADMIN_EMAIL = "anahelouise.ss@gmail.com";
 
+// Generate a secure random password
+function generateSecurePassword(length: number = 16): string {
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+  const special = '!@#$%^&*';
+  const allChars = lowercase + uppercase + numbers + special;
+  
+  // Ensure at least one of each type
+  let password = '';
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += special[Math.floor(Math.random() * special.length)];
+  
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -58,14 +82,17 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { email, name, password, role: requestedRole } = await req.json();
+    const { email, name, role: requestedRole } = await req.json();
 
-    if (!email || !password) {
+    if (!email) {
       return new Response(
-        JSON.stringify({ error: "Email e senha são obrigatórios" }),
+        JSON.stringify({ error: "Email é obrigatório" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Generate secure random password server-side
+    const generatedPassword = generateSecurePassword(16);
 
     // Validate role - only allow 'user' or 'bibliotecario', never 'admin'
     const validRoles = ['user', 'bibliotecario'];
@@ -74,7 +101,7 @@ serve(async (req) => {
     // Create the new user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password,
+      password: generatedPassword,
       email_confirm: true,
     });
 
@@ -117,8 +144,13 @@ serve(async (req) => {
 
     console.log(`User created with role: ${assignedRole}`);
 
+    // Return the generated password so admin can share it securely
     return new Response(
-      JSON.stringify({ success: true, user: { id: newUser.user.id, email } }),
+      JSON.stringify({ 
+        success: true, 
+        user: { id: newUser.user.id, email },
+        temporaryPassword: generatedPassword 
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {

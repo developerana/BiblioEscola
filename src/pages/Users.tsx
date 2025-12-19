@@ -27,8 +27,6 @@ interface UserProfile {
   role?: 'admin' | 'bibliotecario' | 'user';
 }
 
-const DEFAULT_PASSWORD = 'Biblioteca@2024';
-
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   bibliotecario: 'Bibliotecário',
@@ -42,6 +40,7 @@ export default function Users() {
   const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -114,7 +113,6 @@ export default function Users() {
         body: {
           email: formData.email,
           name: formData.name,
-          password: DEFAULT_PASSWORD,
           role: formData.role,
         },
       });
@@ -125,9 +123,14 @@ export default function Users() {
         throw new Error(data.error);
       }
 
+      // Store the generated password to show to admin
+      if (data?.temporaryPassword) {
+        setGeneratedPassword(data.temporaryPassword);
+      }
+
       toast({
         title: 'Usuário cadastrado',
-        description: `${formData.email} foi cadastrado como ${ROLE_LABELS[formData.role]} com a senha padrão.`,
+        description: `${formData.email} foi cadastrado como ${ROLE_LABELS[formData.role]}. A senha temporária foi gerada.`,
       });
 
       setFormData({ email: '', name: '', role: 'user' });
@@ -219,7 +222,7 @@ export default function Users() {
                 <DialogHeader>
                   <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
                   <DialogDescription>
-                    O usuário receberá acesso com a senha padrão: {DEFAULT_PASSWORD}
+                    Uma senha temporária segura será gerada automaticamente.
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -375,7 +378,7 @@ export default function Users() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>• A senha padrão para novos usuários é: <strong>{DEFAULT_PASSWORD}</strong></p>
+            <p>• Senhas temporárias seguras são geradas automaticamente para novos usuários.</p>
             <p>• Os usuários devem alterar a senha após o primeiro login.</p>
             <p>• Apenas administradores podem cadastrar novos usuários.</p>
             <p>• Usuários desativados não conseguem fazer login no sistema.</p>
@@ -403,6 +406,47 @@ export default function Users() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!generatedPassword} onOpenChange={() => setGeneratedPassword(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Usuário Criado com Sucesso</DialogTitle>
+            <DialogDescription>
+              Copie a senha temporária abaixo e compartilhe de forma segura com o usuário.
+              Esta senha não será exibida novamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <Label className="text-sm text-muted-foreground">Senha Temporária</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 text-lg font-mono bg-background p-2 rounded border">
+                  {generatedPassword}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedPassword || '');
+                    toast({
+                      title: 'Copiado!',
+                      description: 'Senha copiada para a área de transferência.',
+                    });
+                  }}
+                >
+                  Copiar
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              ⚠️ O usuário deve alterar esta senha após o primeiro login.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setGeneratedPassword(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
