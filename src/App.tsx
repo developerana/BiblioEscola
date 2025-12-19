@@ -14,6 +14,7 @@ import Loans from "./pages/Loans";
 import Returns from "./pages/Returns";
 import History from "./pages/History";
 import Users from "./pages/Users";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/devolucoes" element={<Returns />} />
                 <Route path="/historico" element={<History />} />
                 <Route path="/usuarios" element={<Users />} />
+                <Route path="/configuracoes" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

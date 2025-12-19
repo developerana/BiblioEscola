@@ -10,7 +10,8 @@ import {
   Library,
   Sun,
   Moon,
-  Users
+  Users,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,23 @@ export function Sidebar() {
               Usuários
             </NavLink>
           )}
+
+          {/* Settings link - all users */}
+          <NavLink
+            to="/configuracoes"
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200',
+              location.pathname === '/configuracoes'
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm' 
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            )}
+          >
+            <Settings className={cn(
+              'h-5 w-5 transition-colors',
+              location.pathname === '/configuracoes' ? 'text-sidebar-primary' : ''
+            )} />
+            Configurações
+          </NavLink>
         </nav>
 
         {/* Footer */}
