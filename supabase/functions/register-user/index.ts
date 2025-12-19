@@ -107,10 +107,17 @@ serve(async (req) => {
 
     if (createError) {
       console.error("Error creating user:", createError);
+      console.error("Error message:", createError.message);
+      console.error("Error code:", (createError as any).code);
+      
       let errorMessage = "Erro ao criar usuário";
-      if (createError.message.includes("already registered")) {
+      const errorStr = JSON.stringify(createError).toLowerCase();
+      const messageStr = (createError.message || '').toLowerCase();
+      
+      if (messageStr.includes("already") || errorStr.includes("email_exists") || errorStr.includes("already")) {
         errorMessage = "Este email já está cadastrado";
       }
+      
       return new Response(
         JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
