@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { KeyRound, User, Mail } from 'lucide-react';
+import { KeyRound, User, Mail, AlertTriangle } from 'lucide-react';
 
 export default function Settings() {
-  const { user, role } = useAuth();
+  const { user, role, mustChangePassword, clearMustChangePassword } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({
@@ -49,6 +50,17 @@ export default function Settings() {
 
       if (error) throw error;
 
+      // Update the must_change_password flag in the database
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ must_change_password: false })
+          .eq('user_id', user.id);
+        
+        // Clear the local state
+        clearMustChangePassword();
+      }
+
       toast({
         title: 'Senha alterada',
         description: 'Sua senha foi alterada com sucesso.',
@@ -81,6 +93,15 @@ export default function Settings() {
         title="Configurações" 
         description="Gerencie suas configurações de conta"
       />
+
+      {mustChangePassword && (
+        <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 dark:text-amber-200">
+            <strong>Primeiro acesso detectado!</strong> Por segurança, você deve alterar sua senha temporária antes de continuar usando o sistema.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* User Info Card */}

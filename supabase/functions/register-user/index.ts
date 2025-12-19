@@ -117,13 +117,14 @@ serve(async (req) => {
       );
     }
 
-    // Create profile
+    // Create profile with must_change_password flag set to true
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
         user_id: newUser.user.id,
         email,
         name: name || null,
+        must_change_password: true,
       });
 
     if (profileError) {
