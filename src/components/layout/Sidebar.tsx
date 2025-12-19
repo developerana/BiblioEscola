@@ -11,11 +11,17 @@ import {
   Sun,
   Moon,
   Users,
-  Settings
+  Settings,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -29,7 +35,7 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, mustChangePassword, signOut } = useAuth();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -38,6 +44,12 @@ export function Sidebar() {
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleBlockedClick = (e: React.MouseEvent) => {
+    if (mustChangePassword) {
+      e.preventDefault();
+    }
   };
 
   return (
@@ -58,6 +70,30 @@ export function Sidebar() {
         <nav className="flex-1 space-y-1 px-3 py-4">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
+            const isBlocked = mustChangePassword;
+            
+            if (isBlocked) {
+              return (
+                <Tooltip key={item.to}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 cursor-not-allowed opacity-50',
+                        'text-sidebar-foreground/50'
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                      <Lock className="h-3 w-3 ml-auto" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Altere sua senha para desbloquear</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
             return (
               <NavLink
                 key={item.to}
@@ -80,38 +116,63 @@ export function Sidebar() {
 
           {/* Admin-only: Users link */}
           {isAdmin && (
-            <NavLink
-              to="/usuarios"
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200',
-                location.pathname === '/usuarios'
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm' 
-                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-              )}
-            >
-              <Users className={cn(
-                'h-5 w-5 transition-colors',
-                location.pathname === '/usuarios' ? 'text-sidebar-primary' : ''
-              )} />
-              Usuários
-            </NavLink>
+            mustChangePassword ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 cursor-not-allowed opacity-50',
+                      'text-sidebar-foreground/50'
+                    )}
+                  >
+                    <Users className="h-5 w-5" />
+                    Usuários
+                    <Lock className="h-3 w-3 ml-auto" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Altere sua senha para desbloquear</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <NavLink
+                to="/usuarios"
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200',
+                  location.pathname === '/usuarios'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm' 
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                )}
+              >
+                <Users className={cn(
+                  'h-5 w-5 transition-colors',
+                  location.pathname === '/usuarios' ? 'text-sidebar-primary' : ''
+                )} />
+                Usuários
+              </NavLink>
+            )
           )}
 
-          {/* Settings link - all users */}
+          {/* Settings link - always accessible */}
           <NavLink
             to="/configuracoes"
             className={cn(
               'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200',
               location.pathname === '/configuracoes'
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm' 
-                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
+              mustChangePassword && 'ring-2 ring-amber-500 ring-offset-2 ring-offset-sidebar'
             )}
           >
             <Settings className={cn(
               'h-5 w-5 transition-colors',
-              location.pathname === '/configuracoes' ? 'text-sidebar-primary' : ''
+              location.pathname === '/configuracoes' ? 'text-sidebar-primary' : '',
+              mustChangePassword && 'text-amber-500'
             )} />
             Configurações
+            {mustChangePassword && (
+              <span className="ml-auto flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            )}
           </NavLink>
         </nav>
 
