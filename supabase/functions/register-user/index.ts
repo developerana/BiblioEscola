@@ -58,7 +58,7 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { email, name, password } = await req.json();
+    const { email, name, password, role: requestedRole } = await req.json();
 
     if (!email || !password) {
       return new Response(
@@ -66,6 +66,10 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Validate role - only allow 'user' or 'bibliotecario', never 'admin'
+    const validRoles = ['user', 'bibliotecario'];
+    const assignedRole = validRoles.includes(requestedRole) ? requestedRole : 'user';
 
     // Create the new user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -99,17 +103,19 @@ serve(async (req) => {
       console.error("Error creating profile:", profileError);
     }
 
-    // Assign 'user' role
+    // Assign role
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .insert({
         user_id: newUser.user.id,
-        role: "user",
+        role: assignedRole,
       });
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
     }
+
+    console.log(`User created with role: ${assignedRole}`);
 
     return new Response(
       JSON.stringify({ success: true, user: { id: newUser.user.id, email } }),

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,16 +24,22 @@ interface UserProfile {
   name: string | null;
   created_at: string;
   is_active: boolean;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'bibliotecario' | 'user';
 }
 
 const DEFAULT_PASSWORD = 'Biblioteca@2024';
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrador',
+  bibliotecario: 'Bibliotecário',
+  user: 'Usuário',
+};
 
 export default function Users() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', name: '' });
+  const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
   const { toast } = useToast();
@@ -80,7 +87,7 @@ export default function Users() {
         return {
           ...profile,
           is_active: profile.is_active ?? true,
-          role: roleData?.role as 'admin' | 'user' || 'user',
+          role: roleData?.role as 'admin' | 'bibliotecario' | 'user' || 'user',
         };
       })
     );
@@ -108,6 +115,7 @@ export default function Users() {
           email: formData.email,
           name: formData.name,
           password: DEFAULT_PASSWORD,
+          role: formData.role,
         },
       });
 
@@ -119,10 +127,10 @@ export default function Users() {
 
       toast({
         title: 'Usuário cadastrado',
-        description: `${formData.email} foi cadastrado com a senha padrão.`,
+        description: `${formData.email} foi cadastrado como ${ROLE_LABELS[formData.role]} com a senha padrão.`,
       });
 
-      setFormData({ email: '', name: '' });
+      setFormData({ email: '', name: '', role: 'user' });
       setIsDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -235,6 +243,31 @@ export default function Users() {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Tipo de Usuário *</Label>
+                    <Select 
+                      value={formData.role} 
+                      onValueChange={(value: 'bibliotecario' | 'user') => setFormData({ ...formData, role: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bibliotecario">
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">Bibliotecário</span>
+                            <span className="text-xs text-muted-foreground">Pode cadastrar, editar e excluir livros</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="user">
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">Usuário</span>
+                            <span className="text-xs text-muted-foreground">Apenas empréstimos e devoluções</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                       Cancelar
@@ -273,8 +306,8 @@ export default function Users() {
                       </TableCell>
                       <TableCell>{userItem.email}</TableCell>
                       <TableCell>
-                        <Badge variant={userItem.role === 'admin' ? 'default' : 'secondary'}>
-                          {userItem.role === 'admin' ? 'Administrador' : 'Usuário'}
+                        <Badge variant={userItem.role === 'admin' ? 'default' : userItem.role === 'bibliotecario' ? 'outline' : 'secondary'}>
+                          {ROLE_LABELS[userItem.role || 'user']}
                         </Badge>
                       </TableCell>
                       <TableCell>
