@@ -6,7 +6,6 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Book } from '@/types/library';
+import { DeleteBookDialog } from '@/components/books/DeleteBookDialog';
 
 const ITEMS_PER_PAGE = 30;
 
@@ -41,6 +41,8 @@ export default function Books() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredBooks = searchBooks(searchQuery, filter);
@@ -124,7 +126,7 @@ export default function Books() {
     resetForm();
   };
 
-  const handleDelete = (book: Book) => {
+  const handleDeleteClick = (book: Book) => {
     if (book.quantidade_total !== book.quantidade_disponivel) {
       toast({
         title: 'Não é possível excluir',
@@ -134,11 +136,17 @@ export default function Books() {
       return;
     }
     
+    setBookToDelete(book);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = (book: Book) => {
     deleteBook(book.id);
     toast({
       title: 'Livro excluído',
       description: `"${book.titulo}" foi removido do acervo.`,
     });
+    setBookToDelete(null);
   };
 
   return (
@@ -329,7 +337,7 @@ export default function Books() {
                       variant="outline"
                       size="sm"
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDelete(book)}
+                      onClick={() => handleDeleteClick(book)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -381,7 +389,7 @@ export default function Books() {
                           variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(book)}
+                          onClick={() => handleDeleteClick(book)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -433,6 +441,13 @@ export default function Books() {
           </Button>
         </div>
       )}
+      {/* Delete Confirmation Dialog */}
+      <DeleteBookDialog
+        book={bookToDelete}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+      />
     </MainLayout>
   );
 }
