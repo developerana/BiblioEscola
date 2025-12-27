@@ -86,7 +86,7 @@ export default function Returns() {
           />
           <div className="flex items-center gap-3">
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <ArrowUpDown className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
@@ -95,7 +95,7 @@ export default function Returns() {
                 <SelectItem value="oldest">Mais antigo primeiro</SelectItem>
               </SelectContent>
             </Select>
-            <ToggleGroup 
+            <ToggleGroup
               type="single" 
               value={viewMode} 
               onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}
@@ -123,7 +123,7 @@ export default function Returns() {
         </Card>
       ) : (
         <div className={viewMode === 'grid' 
-          ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" 
+          ? "grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
           : "flex flex-col gap-3"
         }>
           {filteredLoans.map((loan, index) => {

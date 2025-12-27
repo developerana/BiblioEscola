@@ -66,7 +66,7 @@ export default function Dashboard() {
       />
 
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
         <StatCard
           title="Total de Livros"
           value={stats.totalLivros}
@@ -103,7 +103,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <form onSubmit={handleSubmit} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Livro *</Label>
                 <Input
@@ -171,7 +171,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="sm:col-span-2 lg:col-span-3 flex justify-end pt-4">
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-end pt-4">
                 <Button type="submit" className="bg-gradient-primary hover:opacity-90">
                   <Plus className="h-4 w-4 mr-2" />
                   Cadastrar Livro
@@ -202,13 +202,13 @@ export default function Dashboard() {
                   return (
                     <div 
                       key={loan.id} 
-                      className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-muted/50 border border-border"
                     >
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate">{loan.livro?.titulo || 'Livro não encontrado'}</h4>
-                        <p className="text-sm text-muted-foreground">{loan.aluno_nome} - Turma: {loan.aluno_turma}</p>
+                        <h4 className="font-medium truncate text-sm sm:text-base">{loan.livro?.titulo || 'Livro não encontrado'}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{loan.aluno_nome} - Turma: {loan.aluno_turma}</p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 justify-between sm:justify-end">
                         <div className="text-right text-sm">
                           <p className="text-muted-foreground">
                             {format(parseISO(loan.data_emprestimo), 'dd/MM/yyyy')}

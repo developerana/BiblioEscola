@@ -103,7 +103,7 @@ export default function Settings() {
         </Alert>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         {/* User Info Card */}
         <Card className="shadow-card">
           <CardHeader>

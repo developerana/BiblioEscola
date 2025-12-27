@@ -220,26 +220,27 @@ export default function Books() {
       </PageHeader>
 
       {/* Search and Filters */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Buscar por título ou autor..."
-            className="flex-1 max-w-md"
+            className="w-full sm:flex-1 sm:max-w-md"
           />
-          <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="available">Disponíveis</SelectItem>
-              <SelectItem value="borrowed">Emprestados</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 sm:gap-4 flex-wrap">
+            <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="available">Disponíveis</SelectItem>
+                <SelectItem value="borrowed">Emprestados</SelectItem>
+              </SelectContent>
+            </Select>
           <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as typeof sortOrder)}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Ordenar" />
             </SelectTrigger>
             <SelectContent>
@@ -258,10 +259,11 @@ export default function Books() {
               </SelectItem>
             </SelectContent>
           </Select>
+          </div>
         </div>
         
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1">
+        <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1 self-start">
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
             size="sm"
@@ -291,7 +293,7 @@ export default function Books() {
         </Card>
       ) : viewMode === 'grid' ? (
         /* Grid View */
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {paginatedBooks.map((book, index) => (
             <Card
               key={book.id} 
@@ -353,21 +355,21 @@ export default function Books() {
               {paginatedBooks.map((book, index) => (
                 <div 
                   key={book.id} 
-                  className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors animate-fade-in"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors animate-fade-in"
                   style={{ animationDelay: `${index * 30}ms` }}
                 >
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <BookOpen className="h-6 w-6 text-primary" />
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold truncate">{book.titulo}</h3>
-                      <p className="text-muted-foreground text-sm">{book.autor} • {book.editora}</p>
+                      <h3 className="font-display font-semibold truncate text-sm sm:text-base">{book.titulo}</h3>
+                      <p className="text-muted-foreground text-xs sm:text-sm truncate">{book.autor} • {book.editora}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <div className="text-right hidden sm:block">
+                  <div className="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
+                    <div className="text-left sm:text-right">
                       <p className="text-sm font-medium">{book.quantidade_disponivel} / {book.quantidade_total}</p>
                       <p className="text-xs text-muted-foreground">disponíveis</p>
                     </div>
