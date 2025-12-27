@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Undo2, AlertTriangle, CheckCircle2, LayoutGrid, List } from 'lucide-react';
+import { Undo2, AlertTriangle, CheckCircle2, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +32,7 @@ export default function Returns() {
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('oldest');
 
   const activeLoans = getLoanHistory().filter(loan => !loan.data_devolucao);
   const today = new Date();
@@ -35,7 +43,11 @@ export default function Returns() {
       loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) => parseISO(a.data_emprestimo).getTime() - parseISO(b.data_emprestimo).getTime());
+    .sort((a, b) => {
+      const dateA = parseISO(a.data_emprestimo).getTime();
+      const dateB = parseISO(b.data_emprestimo).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
 
   const handleReturn = (loanId: string) => {
     const success = returnBook(loanId);
@@ -63,27 +75,41 @@ export default function Returns() {
     <MainLayout>
       <PageHeader title="Devoluções" description="Registre a devolução de livros emprestados" />
 
-      {/* Search and View Toggle */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Buscar por título, aluno ou turma..."
-          className="max-w-md"
-        />
-        <ToggleGroup 
-          type="single" 
-          value={viewMode} 
-          onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}
-          className="justify-start"
-        >
-          <ToggleGroupItem value="grid" aria-label="Visualização em grade">
-            <LayoutGrid className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="list" aria-label="Visualização em lista">
-            <List className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
+      {/* Search, Sort and View Toggle */}
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Buscar por título, aluno ou turma..."
+            className="w-full sm:max-w-lg"
+          />
+          <div className="flex items-center gap-3">
+            <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
+              <SelectTrigger className="w-[200px]">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Mais recente primeiro</SelectItem>
+                <SelectItem value="oldest">Mais antigo primeiro</SelectItem>
+              </SelectContent>
+            </Select>
+            <ToggleGroup 
+              type="single" 
+              value={viewMode} 
+              onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}
+              className="justify-start"
+            >
+              <ToggleGroupItem value="grid" aria-label="Visualização em grade">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Visualização em lista">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </div>
       </div>
 
       {/* Active Loans */}
