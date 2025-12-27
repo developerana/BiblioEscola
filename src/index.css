@@ -77,58 +77,52 @@
   }
 
   .dark {
-    /* Deep warm charcoal background */
-    --background: 30 15% 8%;
-    --foreground: 40 20% 90%;
+    --background: 220 20% 8%;
+    --foreground: 40 25% 92%;
 
-    /* Slightly elevated card surfaces */
-    --card: 30 12% 12%;
-    --card-foreground: 40 20% 90%;
+    --card: 220 18% 12%;
+    --card-foreground: 40 25% 92%;
 
-    --popover: 30 12% 14%;
-    --popover-foreground: 40 20% 90%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 40 25% 92%;
 
-    /* Rich teal primary - scholarly and elegant */
-    --primary: 180 50% 45%;
-    --primary-foreground: 30 15% 8%;
+    /* Amber gold for primary - bright and visible */
+    --primary: 38 95% 58%;
+    --primary-foreground: 220 30% 8%;
 
-    /* Warm dark secondary surfaces */
-    --secondary: 30 10% 18%;
-    --secondary-foreground: 40 20% 88%;
+    /* Slightly lighter secondary for better visibility */
+    --secondary: 220 15% 22%;
+    --secondary-foreground: 40 25% 92%;
 
-    /* Muted surfaces for depth */
-    --muted: 30 8% 15%;
-    --muted-foreground: 40 12% 55%;
+    --muted: 220 14% 18%;
+    --muted-foreground: 40 15% 60%;
 
-    /* Warm gold accent */
-    --accent: 38 85% 55%;
-    --accent-foreground: 30 15% 8%;
+    /* Teal accent - brighter for dark mode */
+    --accent: 195 60% 50%;
+    --accent-foreground: 220 30% 8%;
 
-    /* Soft coral destructive */
-    --destructive: 5 65% 55%;
-    --destructive-foreground: 40 20% 95%;
+    /* Brighter destructive for visibility */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Muted green success */
-    --success: 155 50% 45%;
-    --success-foreground: 30 15% 8%;
+    --success: 152 60% 50%;
+    --success-foreground: 220 30% 8%;
 
-    /* Amber warning */
-    --warning: 35 85% 50%;
-    --warning-foreground: 30 15% 8%;
+    --warning: 38 95% 55%;
+    --warning-foreground: 220 30% 8%;
 
-    --border: 30 10% 20%;
-    --input: 30 10% 18%;
-    --ring: 180 50% 45%;
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 38 95% 58%;
 
-    /* Dark teal sidebar */
-    --sidebar-background: 185 35% 10%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 38 85% 55%;
-    --sidebar-primary-foreground: 30 15% 8%;
-    --sidebar-accent: 185 30% 16%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 185 25% 18%;
-    --sidebar-ring: 38 85% 55%;
+    --sidebar-background: 220 22% 6%;
+    --sidebar-foreground: 40 25% 92%;
+    --sidebar-primary: 38 95% 58%;
+    --sidebar-primary-foreground: 220 30% 8%;
+    --sidebar-accent: 220 18% 14%;
+    --sidebar-accent-foreground: 40 25% 92%;
+    --sidebar-border: 220 14% 16%;
+    --sidebar-ring: 38 95% 58%;
   }
 }
 
