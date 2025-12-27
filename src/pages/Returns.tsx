@@ -69,7 +69,7 @@ export default function Returns() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Buscar por título, aluno ou turma..."
-          className="max-w-md"
+          className="w-full sm:max-w-md md:max-w-lg"
         />
         <ToggleGroup 
           type="single" 
