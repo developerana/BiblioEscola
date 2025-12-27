@@ -185,16 +185,14 @@ export default function Books() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editora">Editora</Label>
-                  <Input
-                    id="editora"
-                    value={formData.editora}
-                    onChange={(e) => setFormData({ ...formData, editora: e.target.value })}
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="editora">Editora</Label>
+                <Input
+                  id="editora"
+                  value={formData.editora}
+                  onChange={(e) => setFormData({ ...formData, editora: e.target.value })}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="quantidade">Quantidade Total</Label>
