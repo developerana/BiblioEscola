@@ -204,7 +204,7 @@ export default function Users() {
 
       <div className="space-y-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle>Usuários Cadastrados</CardTitle>
               <CardDescription>
@@ -213,7 +213,7 @@ export default function Users() {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <UserPlus className="h-4 w-4" />
                   Novo Usuário
                 </Button>
@@ -290,82 +290,84 @@ export default function Users() {
                 <p>Nenhum usuário cadastrado ainda.</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data de Cadastro</TableHead>
-                    <TableHead className="w-[70px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((userItem) => (
-                    <TableRow key={userItem.id} className={!userItem.is_active ? 'opacity-60' : ''}>
-                      <TableCell className="font-medium">
-                        {userItem.name || '-'}
-                      </TableCell>
-                      <TableCell>{userItem.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={userItem.role === 'admin' ? 'default' : userItem.role === 'bibliotecario' ? 'outline' : 'secondary'}>
-                          {ROLE_LABELS[userItem.role || 'user']}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={userItem.is_active ? 'outline' : 'destructive'}>
-                          {userItem.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(userItem.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        {userItem.role !== 'admin' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                disabled={actionLoading === userItem.user_id}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {userItem.is_active ? (
-                                <DropdownMenuItem
-                                  onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
-                                  className="text-warning"
-                                >
-                                  <UserX className="h-4 w-4 mr-2" />
-                                  Desativar
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem
-                                  onClick={() => handleUserAction(userItem.user_id, 'activate')}
-                                  className="text-success"
-                                >
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Ativar
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => setDeleteConfirm(userItem)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">Data de Cadastro</TableHead>
+                      <TableHead className="w-[70px]">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((userItem) => (
+                      <TableRow key={userItem.id} className={!userItem.is_active ? 'opacity-60' : ''}>
+                        <TableCell className="font-medium">
+                          {userItem.name || '-'}
+                        </TableCell>
+                        <TableCell className="max-w-[150px] truncate">{userItem.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={userItem.role === 'admin' ? 'default' : userItem.role === 'bibliotecario' ? 'outline' : 'secondary'}>
+                            {ROLE_LABELS[userItem.role || 'user']}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={userItem.is_active ? 'outline' : 'destructive'}>
+                            {userItem.is_active ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {new Date(userItem.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell>
+                          {userItem.role !== 'admin' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  disabled={actionLoading === userItem.user_id}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {userItem.is_active ? (
+                                  <DropdownMenuItem
+                                    onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
+                                    className="text-warning"
+                                  >
+                                    <UserX className="h-4 w-4 mr-2" />
+                                    Desativar
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    onClick={() => handleUserAction(userItem.user_id, 'activate')}
+                                    className="text-success"
+                                  >
+                                    <UserCheck className="h-4 w-4 mr-2" />
+                                    Ativar
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() => setDeleteConfirm(userItem)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

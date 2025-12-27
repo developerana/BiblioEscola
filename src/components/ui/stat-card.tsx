@@ -39,17 +39,17 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <div className={cn(
-      'rounded-xl border p-6 shadow-card transition-all duration-300 hover:shadow-card-hover',
+      'rounded-xl border p-4 sm:p-6 shadow-card transition-all duration-300 hover:shadow-card-hover',
       variantStyles[variant],
       className
     )}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="font-display text-3xl font-bold tracking-tight">{value}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+          <p className="font-display text-xl sm:text-3xl font-bold tracking-tight">{value}</p>
           {trend && (
             <p className={cn(
-              'text-sm font-medium',
+              'text-xs sm:text-sm font-medium',
               trend.isPositive ? 'text-success' : 'text-destructive'
             )}>
               {trend.isPositive ? '+' : ''}{trend.value}% este mês
@@ -57,10 +57,10 @@ export function StatCard({
           )}
         </div>
         <div className={cn(
-          'flex h-12 w-12 items-center justify-center rounded-lg',
+          'flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg flex-shrink-0',
           iconStyles[variant]
         )}>
-          <Icon className="h-6 w-6" />
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
     </div>

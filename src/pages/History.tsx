@@ -67,10 +67,10 @@ export default function History() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Buscar por título, aluno ou turma..."
-          className="flex-1 max-w-md"
+          className="w-full sm:flex-1 sm:max-w-md"
         />
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
@@ -147,7 +147,7 @@ export default function History() {
       </Card>
 
       {/* Summary Stats */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-3">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-display font-bold text-primary">
