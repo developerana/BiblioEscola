@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Undo2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Undo2, AlertTriangle, CheckCircle2, LayoutGrid, List } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ export default function Returns() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const activeLoans = getLoanHistory().filter(loan => !loan.data_devolucao);
   const today = new Date();
@@ -61,14 +63,27 @@ export default function Returns() {
     <MainLayout>
       <PageHeader title="Devoluções" description="Registre a devolução de livros emprestados" />
 
-      {/* Search */}
-      <div className="mb-6">
+      {/* Search and View Toggle */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Buscar por título, aluno ou turma..."
           className="max-w-md"
         />
+        <ToggleGroup 
+          type="single" 
+          value={viewMode} 
+          onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}
+          className="justify-start"
+        >
+          <ToggleGroupItem value="grid" aria-label="Visualização em grade">
+            <LayoutGrid className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="list" aria-label="Visualização em lista">
+            <List className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       {/* Active Loans */}
@@ -81,7 +96,10 @@ export default function Returns() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={viewMode === 'grid' 
+          ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" 
+          : "flex flex-col gap-3"
+        }>
           {filteredLoans.map((loan, index) => {
             const isOverdue = isBefore(parseISO(loan.data_prevista_devolucao), today);
             const daysOverdue = isOverdue 
@@ -90,6 +108,69 @@ export default function Returns() {
             const daysRemaining = !isOverdue 
               ? differenceInDays(parseISO(loan.data_prevista_devolucao), today)
               : 0;
+
+            if (viewMode === 'list') {
+              return (
+                <Card 
+                  key={loan.id} 
+                  className={`shadow-card hover:shadow-card-hover transition-all duration-300 animate-fade-in ${
+                    isOverdue ? 'border-destructive/50' : ''
+                  }`}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-display font-semibold truncate">
+                          {loan.livro?.titulo || 'Livro não encontrado'}
+                        </h3>
+                        <StatusBadge status={isOverdue ? 'atrasado' : 'emprestado'} />
+                      </div>
+                      <p className="text-sm text-muted-foreground">{loan.livro?.autor}</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="rounded-lg bg-muted/50 px-3 py-2">
+                        <p className="font-medium">{loan.aluno_nome}</p>
+                        <p className="text-xs text-muted-foreground">Turma: {loan.aluno_turma}</p>
+                      </div>
+
+                      <div className="hidden md:block text-right">
+                        <p className="text-muted-foreground text-xs">Devolução prevista</p>
+                        <p className={isOverdue ? 'text-destructive font-medium' : ''}>
+                          {format(parseISO(loan.data_prevista_devolucao), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+
+                      {isOverdue ? (
+                        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                          <span className="text-sm font-medium whitespace-nowrap">
+                            {daysOverdue}d atraso
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-success">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          <span className="text-sm font-medium whitespace-nowrap">
+                            {daysRemaining}d restantes
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      className="bg-gradient-primary hover:opacity-90"
+                      onClick={() => setConfirmDialog(loan.id)}
+                    >
+                      <Undo2 className="h-4 w-4 mr-2" />
+                      Devolver
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            }
 
             return (
               <Card 
