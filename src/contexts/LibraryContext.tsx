@@ -68,6 +68,35 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshData();
+
+    // Subscribe to real-time changes for books
+    const booksChannel = supabase
+      .channel('books-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'books' },
+        () => {
+          fetchBooks().then(setBooks);
+        }
+      )
+      .subscribe();
+
+    // Subscribe to real-time changes for loans
+    const loansChannel = supabase
+      .channel('loans-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'loans' },
+        () => {
+          fetchLoans().then(setLoans);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(booksChannel);
+      supabase.removeChannel(loansChannel);
+    };
   }, [refreshData]);
 
   const addBook = useCallback(async (book: Omit<Book, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> => {
