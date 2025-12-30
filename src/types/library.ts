@@ -22,6 +22,7 @@ export interface Loan {
   created_at: string;
   // Joined fields
   book?: Book;
+  created_by_profile?: { name: string | null; email: string } | null;
 }
 
 export interface DashboardStats {

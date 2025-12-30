@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { History as HistoryIcon, Filter } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { History as HistoryIcon, Filter, User } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
@@ -28,9 +28,22 @@ export default function History() {
   const { getLoanHistory, loading } = useLibrary();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'emprestado' | 'devolvido' | 'atrasado'>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
 
   const allLoans = getLoanHistory();
   const today = new Date();
+
+  // Get unique users who created loans
+  const uniqueUsers = useMemo(() => {
+    const usersMap = new Map<string, { id: string; name: string }>();
+    allLoans.forEach(loan => {
+      if (loan.created_by && loan.created_by_profile) {
+        const displayName = loan.created_by_profile.name || loan.created_by_profile.email;
+        usersMap.set(loan.created_by, { id: loan.created_by, name: displayName });
+      }
+    });
+    return Array.from(usersMap.values());
+  }, [allLoans]);
 
   const filteredLoans = allLoans.filter(loan => {
     const matchesSearch = 
@@ -39,6 +52,9 @@ export default function History() {
       loan.student_class.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
+
+    // Filter by user
+    if (userFilter !== 'all' && loan.created_by !== userFilter) return false;
 
     if (statusFilter === 'all') return true;
 
@@ -73,7 +89,7 @@ export default function History() {
       <PageHeader title="Histórico" description="Visualize o histórico completo de empréstimos" />
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
@@ -86,10 +102,24 @@ export default function History() {
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="emprestado">Em dia</SelectItem>
             <SelectItem value="atrasado">Atrasados</SelectItem>
             <SelectItem value="devolvido">Devolvidos</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={userFilter} onValueChange={setUserFilter}>
+          <SelectTrigger className="w-full sm:w-56">
+            <User className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Filtrar por responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
+            {uniqueUsers.map(user => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -113,6 +143,7 @@ export default function History() {
                     <TableHead>Empréstimo</TableHead>
                     <TableHead>Prev. Devolução</TableHead>
                     <TableHead>Devolução</TableHead>
+                    <TableHead>Responsável</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -143,6 +174,11 @@ export default function History() {
                             ? format(parseISO(loan.actual_return_date), "dd 'de' MMM", { locale: ptBR })
                             : '-'
                           }
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm">
+                            {loan.created_by_profile?.name || loan.created_by_profile?.email || '-'}
+                          </p>
                         </TableCell>
                         <TableCell className="text-center">
                           <StatusBadge status={status} />
