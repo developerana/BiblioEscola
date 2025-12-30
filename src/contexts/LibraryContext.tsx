@@ -44,7 +44,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       .from('loans')
       .select(`
         *,
-        book:books(*)
+        book:books(*),
+        created_by_profile:profiles!loans_created_by_fkey(name, email)
       `)
       .order('created_at', { ascending: false });
     
@@ -55,6 +56,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     return (data || []).map(loan => ({
       ...loan,
       status: loan.status as 'emprestado' | 'devolvido' | 'atrasado',
+      created_by_profile: loan.created_by_profile as { name: string | null; email: string } | null,
     }));
   };
 
