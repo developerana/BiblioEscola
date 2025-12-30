@@ -25,7 +25,7 @@ import { format, parseISO, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function History() {
-  const { getLoanHistory } = useLibrary();
+  const { getLoanHistory, loading } = useLibrary();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'emprestado' | 'devolvido' | 'atrasado'>('all');
 
@@ -34,28 +34,39 @@ export default function History() {
 
   const filteredLoans = allLoans.filter(loan => {
     const matchesSearch = 
-      loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase());
+      loan.book?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.student_class.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
 
     if (statusFilter === 'all') return true;
 
-    const isOverdue = !loan.data_devolucao && isBefore(parseISO(loan.data_prevista_devolucao), today);
+    const isOverdue = !loan.actual_return_date && isBefore(parseISO(loan.expected_return_date), today);
     
     if (statusFilter === 'atrasado') return isOverdue;
-    if (statusFilter === 'devolvido') return !!loan.data_devolucao;
-    if (statusFilter === 'emprestado') return !loan.data_devolucao && !isOverdue;
+    if (statusFilter === 'devolvido') return !!loan.actual_return_date;
+    if (statusFilter === 'emprestado') return !loan.actual_return_date && !isOverdue;
 
     return true;
   });
 
   const getStatus = (loan: typeof allLoans[0]) => {
-    if (loan.data_devolucao) return 'devolvido';
-    if (isBefore(parseISO(loan.data_prevista_devolucao), today)) return 'atrasado';
+    if (loan.actual_return_date) return 'devolvido';
+    if (isBefore(parseISO(loan.expected_return_date), today)) return 'atrasado';
     return 'emprestado';
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <PageHeader title="Histórico" description="Visualize o histórico completo de empréstimos" />
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -113,23 +124,23 @@ export default function History() {
                       <TableRow key={loan.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{loan.livro?.titulo || '-'}</p>
-                            <p className="text-sm text-muted-foreground">{loan.livro?.autor}</p>
+                            <p className="font-medium">{loan.book?.title || '-'}</p>
+                            <p className="text-sm text-muted-foreground">{loan.book?.author}</p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <p className="font-medium">{loan.aluno_nome}</p>
+                          <p className="font-medium">{loan.student_name}</p>
                         </TableCell>
-                        <TableCell>{loan.aluno_turma}</TableCell>
+                        <TableCell>{loan.student_class}</TableCell>
                         <TableCell>
-                          {format(parseISO(loan.data_emprestimo), "dd 'de' MMM", { locale: ptBR })}
-                        </TableCell>
-                        <TableCell>
-                          {format(parseISO(loan.data_prevista_devolucao), "dd 'de' MMM", { locale: ptBR })}
+                          {format(parseISO(loan.loan_date), "dd 'de' MMM", { locale: ptBR })}
                         </TableCell>
                         <TableCell>
-                          {loan.data_devolucao 
-                            ? format(parseISO(loan.data_devolucao), "dd 'de' MMM", { locale: ptBR })
+                          {format(parseISO(loan.expected_return_date), "dd 'de' MMM", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          {loan.actual_return_date 
+                            ? format(parseISO(loan.actual_return_date), "dd 'de' MMM", { locale: ptBR })
                             : '-'
                           }
                         </TableCell>
@@ -151,7 +162,7 @@ export default function History() {
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-display font-bold text-primary">
-              {allLoans.filter(l => !l.data_devolucao && !isBefore(parseISO(l.data_prevista_devolucao), today)).length}
+              {allLoans.filter(l => !l.actual_return_date && !isBefore(parseISO(l.expected_return_date), today)).length}
             </p>
             <p className="text-sm text-muted-foreground">Em dia</p>
           </CardContent>
@@ -159,7 +170,7 @@ export default function History() {
         <Card className="bg-destructive/5 border-destructive/20">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-display font-bold text-destructive">
-              {allLoans.filter(l => !l.data_devolucao && isBefore(parseISO(l.data_prevista_devolucao), today)).length}
+              {allLoans.filter(l => !l.actual_return_date && isBefore(parseISO(l.expected_return_date), today)).length}
             </p>
             <p className="text-sm text-muted-foreground">Atrasados</p>
           </CardContent>
@@ -167,7 +178,7 @@ export default function History() {
         <Card className="bg-success/5 border-success/20">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-display font-bold text-success">
-              {allLoans.filter(l => l.data_devolucao).length}
+              {allLoans.filter(l => l.actual_return_date).length}
             </p>
             <p className="text-sm text-muted-foreground">Devolvidos</p>
           </CardContent>

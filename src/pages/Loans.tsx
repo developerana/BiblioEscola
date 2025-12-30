@@ -20,16 +20,17 @@ import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Loans() {
-  const { books, createLoan } = useLibrary();
+  const { books, createLoan, loading } = useLibrary();
   const { toast } = useToast();
   const [selectedBook, setSelectedBook] = useState('');
   const [studentName, setStudentName] = useState('');
   const [studentClass, setStudentClass] = useState('');
   const [loanDays, setLoanDays] = useState(14);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const availableBooks = books.filter(book => book.quantidade_disponivel > 0);
+  const availableBooks = books.filter(book => book.available_quantity > 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedBook || !studentName.trim() || !studentClass.trim()) {
@@ -41,31 +42,47 @@ export default function Loans() {
       return;
     }
 
-    const success = createLoan(selectedBook, studentName.trim(), studentClass.trim(), loanDays);
-    
-    if (success) {
-      const book = books.find(b => b.id === selectedBook);
+    setIsSubmitting(true);
+    try {
+      const success = await createLoan(selectedBook, studentName.trim(), studentClass.trim(), loanDays);
       
-      toast({
-        title: 'Empréstimo registrado',
-        description: `"${book?.titulo}" emprestado para ${studentName.trim()}.`,
-      });
-      
-      setSelectedBook('');
-      setStudentName('');
-      setStudentClass('');
-      setLoanDays(14);
-    } else {
-      toast({
-        title: 'Erro ao registrar empréstimo',
-        description: 'Livro não disponível ou dados inválidos.',
-        variant: 'destructive',
-      });
+      if (success) {
+        const book = books.find(b => b.id === selectedBook);
+        
+        toast({
+          title: 'Empréstimo registrado',
+          description: `"${book?.title}" emprestado para ${studentName.trim()}.`,
+        });
+        
+        setSelectedBook('');
+        setStudentName('');
+        setStudentClass('');
+        setLoanDays(14);
+      } else {
+        toast({
+          title: 'Erro ao registrar empréstimo',
+          description: 'Livro não disponível ou dados inválidos.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const selectedBookData = books.find(b => b.id === selectedBook);
   const expectedReturnDate = addDays(new Date(), loanDays);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <PageHeader title="Empréstimos" description="Registre novos empréstimos de livros" />
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -99,7 +116,7 @@ export default function Loans() {
                     ) : (
                       availableBooks.map((book) => (
                         <SelectItem key={book.id} value={book.id}>
-                          {book.titulo} ({book.quantidade_disponivel} disp.)
+                          {book.title} ({book.available_quantity} disp.)
                         </SelectItem>
                       ))
                     )}
@@ -156,9 +173,9 @@ export default function Loans() {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-primary hover:opacity-90"
-                disabled={availableBooks.length === 0}
+                disabled={availableBooks.length === 0 || isSubmitting}
               >
-                Registrar Empréstimo
+                {isSubmitting ? 'Registrando...' : 'Registrar Empréstimo'}
               </Button>
             </form>
           </CardContent>
@@ -178,11 +195,11 @@ export default function Loans() {
                 {selectedBookData && (
                   <div className="rounded-lg border border-border bg-muted/30 p-4">
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Livro Selecionado</h4>
-                    <p className="font-display text-lg font-semibold">{selectedBookData.titulo}</p>
-                    <p className="text-muted-foreground">{selectedBookData.autor}</p>
+                    <p className="font-display text-lg font-semibold">{selectedBookData.title}</p>
+                    <p className="text-muted-foreground">{selectedBookData.author}</p>
                     <div className="mt-2 flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground">Disponíveis:</span>
-                      <span className="font-medium text-success">{selectedBookData.quantidade_disponivel}</span>
+                      <span className="font-medium text-success">{selectedBookData.available_quantity}</span>
                     </div>
                   </div>
                 )}

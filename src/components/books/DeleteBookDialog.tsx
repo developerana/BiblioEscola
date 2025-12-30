@@ -25,7 +25,6 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
   const [bookNameInput, setBookNameInput] = useState('');
   const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
 
-  // Reset inputs when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setBookNameInput('');
@@ -33,7 +32,7 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
     }
   }, [open]);
 
-  const isBookNameValid = book && bookNameInput.trim().toLowerCase() === book.titulo.trim().toLowerCase();
+  const isBookNameValid = book && bookNameInput.trim().toLowerCase() === book.title.trim().toLowerCase();
   const isDeleteConfirmValid = deleteConfirmInput.trim().toLowerCase() === 'deletar';
   const canDelete = isBookNameValid && isDeleteConfirmValid;
 
@@ -68,7 +67,7 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
             <p className="text-sm text-destructive font-medium">
               Você está prestes a excluir o livro:
             </p>
-            <p className="text-sm font-semibold mt-1">"{book.titulo}"</p>
+            <p className="text-sm font-semibold mt-1">"{book.title}"</p>
           </div>
 
           <div className="space-y-2">
@@ -79,7 +78,7 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
               id="book-name"
               value={bookNameInput}
               onChange={(e) => setBookNameInput(e.target.value)}
-              placeholder={book.titulo}
+              placeholder={book.title}
               className={bookNameInput && !isBookNameValid ? 'border-destructive' : ''}
             />
             {bookNameInput && !isBookNameValid && (

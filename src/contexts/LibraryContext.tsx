@@ -1,194 +1,249 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { Book, Loan, DashboardStats } from '@/types/library';
+import { supabase } from '@/integrations/supabase/client';
 import { format, addDays, isBefore, parseISO } from 'date-fns';
 
 interface LibraryContextType {
   books: Book[];
   loans: Loan[];
-  addBook: (book: Omit<Book, 'id' | 'created_at'>) => void;
-  updateBook: (id: string, book: Partial<Book>) => void;
-  deleteBook: (id: string) => void;
-  createLoan: (livroId: string, alunoNome: string, alunoTurma: string, diasEmprestimo: number) => boolean;
-  returnBook: (loanId: string) => boolean;
+  loading: boolean;
+  addBook: (book: Omit<Book, 'id' | 'created_at' | 'updated_at'>) => Promise<boolean>;
+  updateBook: (id: string, book: Partial<Book>) => Promise<boolean>;
+  deleteBook: (id: string) => Promise<boolean>;
+  createLoan: (bookId: string, studentName: string, studentClass: string, loanDays: number) => Promise<boolean>;
+  returnBook: (loanId: string) => Promise<boolean>;
   getDashboardStats: () => DashboardStats;
   searchBooks: (query: string, filter?: 'all' | 'available' | 'borrowed') => Book[];
   getLoanHistory: () => Loan[];
   getActiveLoan: (loanId: string) => Loan | undefined;
+  refreshData: () => Promise<void>;
 }
 
 const LibraryContext = createContext<LibraryContextType | undefined>(undefined);
 
-// Initial mock data
-const initialBooks: Book[] = [
-  {
-    id: '1',
-    titulo: 'Dom Casmurro',
-    autor: 'Machado de Assis',
-    editora: 'Companhia das Letras',
-    categoria: 'Literatura Brasileira',
-    quantidade_total: 5,
-    quantidade_disponivel: 3,
-    data_cadastro: '2024-01-15',
-  },
-  {
-    id: '2',
-    titulo: 'O Pequeno Príncipe',
-    autor: 'Antoine de Saint-Exupéry',
-    editora: 'Agir',
-    categoria: 'Literatura Infantil',
-    quantidade_total: 8,
-    quantidade_disponivel: 8,
-    data_cadastro: '2024-01-20',
-  },
-  {
-    id: '3',
-    titulo: 'Harry Potter e a Pedra Filosofal',
-    autor: 'J.K. Rowling',
-    editora: 'Rocco',
-    categoria: 'Fantasia',
-    quantidade_total: 6,
-    quantidade_disponivel: 2,
-    data_cadastro: '2024-02-01',
-  },
-  {
-    id: '4',
-    titulo: '1984',
-    autor: 'George Orwell',
-    editora: 'Companhia das Letras',
-    categoria: 'Ficção Científica',
-    quantidade_total: 4,
-    quantidade_disponivel: 4,
-    data_cadastro: '2024-02-10',
-  },
-];
-
-const initialLoans: Loan[] = [
-  {
-    id: '1',
-    livro_id: '1',
-    aluno_nome: 'Ana Silva',
-    aluno_turma: '9º A',
-    data_emprestimo: '2024-12-01',
-    data_prevista_devolucao: '2024-12-15',
-    data_devolucao: null,
-    status: 'atrasado',
-  },
-  {
-    id: '2',
-    livro_id: '1',
-    aluno_nome: 'Pedro Santos',
-    aluno_turma: '8º B',
-    data_emprestimo: '2024-12-10',
-    data_prevista_devolucao: '2024-12-24',
-    data_devolucao: null,
-    status: 'emprestado',
-  },
-  {
-    id: '3',
-    livro_id: '3',
-    aluno_nome: 'Maria Oliveira',
-    aluno_turma: '7º A',
-    data_emprestimo: '2024-11-15',
-    data_prevista_devolucao: '2024-11-29',
-    data_devolucao: '2024-11-28',
-    status: 'devolvido',
-  },
-  {
-    id: '4',
-    livro_id: '3',
-    aluno_nome: 'João Costa',
-    aluno_turma: '9º B',
-    data_emprestimo: '2024-12-05',
-    data_prevista_devolucao: '2024-12-19',
-    data_devolucao: null,
-    status: 'emprestado',
-  },
-];
-
 export function LibraryProvider({ children }: { children: ReactNode }) {
-  const [books, setBooks] = useState<Book[]>(initialBooks);
-  const [loans, setLoans] = useState<Loan[]>(initialLoans);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const fetchBooks = async () => {
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching books:', error);
+      return [];
+    }
+    return data || [];
+  };
 
-  const addBook = useCallback((book: Omit<Book, 'id' | 'created_at'>) => {
-    const newBook: Book = {
-      ...book,
-      id: generateId(),
-      created_at: new Date().toISOString(),
-    };
-    setBooks(prev => [...prev, newBook]);
+  const fetchLoans = async (): Promise<Loan[]> => {
+    const { data, error } = await supabase
+      .from('loans')
+      .select(`
+        *,
+        book:books(*)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching loans:', error);
+      return [];
+    }
+    return (data || []).map(loan => ({
+      ...loan,
+      status: loan.status as 'emprestado' | 'devolvido' | 'atrasado',
+    }));
+  };
+
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    const [booksData, loansData] = await Promise.all([fetchBooks(), fetchLoans()]);
+    setBooks(booksData);
+    setLoans(loansData);
+    setLoading(false);
   }, []);
 
-  const updateBook = useCallback((id: string, updates: Partial<Book>) => {
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const addBook = useCallback(async (book: Omit<Book, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('books')
+      .insert({
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher,
+        total_quantity: book.total_quantity,
+        available_quantity: book.available_quantity,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding book:', error);
+      return false;
+    }
+    
+    setBooks(prev => [data, ...prev]);
+    return true;
+  }, []);
+
+  const updateBook = useCallback(async (id: string, updates: Partial<Book>): Promise<boolean> => {
+    const { error } = await supabase
+      .from('books')
+      .update({
+        title: updates.title,
+        author: updates.author,
+        publisher: updates.publisher,
+        total_quantity: updates.total_quantity,
+        available_quantity: updates.available_quantity,
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating book:', error);
+      return false;
+    }
+    
     setBooks(prev => prev.map(book => 
       book.id === id ? { ...book, ...updates } : book
     ));
+    return true;
   }, []);
 
-  const deleteBook = useCallback((id: string) => {
+  const deleteBook = useCallback(async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting book:', error);
+      return false;
+    }
+    
     setBooks(prev => prev.filter(book => book.id !== id));
+    return true;
   }, []);
 
-  const createLoan = useCallback((livroId: string, alunoNome: string, alunoTurma: string, diasEmprestimo: number): boolean => {
-    const book = books.find(b => b.id === livroId);
-    if (!book || book.quantidade_disponivel <= 0) return false;
+  const createLoan = useCallback(async (bookId: string, studentName: string, studentClass: string, loanDays: number): Promise<boolean> => {
+    const book = books.find(b => b.id === bookId);
+    if (!book || book.available_quantity <= 0) return false;
 
     const today = new Date();
-    const newLoan: Loan = {
-      id: generateId(),
-      livro_id: livroId,
-      aluno_nome: alunoNome,
-      aluno_turma: alunoTurma,
-      data_emprestimo: format(today, 'yyyy-MM-dd'),
-      data_prevista_devolucao: format(addDays(today, diasEmprestimo), 'yyyy-MM-dd'),
-      data_devolucao: null,
-      status: 'emprestado',
-    };
+    const expectedReturnDate = addDays(today, loanDays);
 
-    setLoans(prev => [...prev, newLoan]);
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data, error } = await supabase
+      .from('loans')
+      .insert({
+        book_id: bookId,
+        student_name: studentName,
+        student_class: studentClass,
+        loan_date: today.toISOString(),
+        expected_return_date: expectedReturnDate.toISOString(),
+        status: 'emprestado',
+        created_by: user?.id || null,
+      })
+      .select(`
+        *,
+        book:books(*)
+      `)
+      .single();
+    
+    if (error) {
+      console.error('Error creating loan:', error);
+      return false;
+    }
+
+    // Update book availability
+    const { error: updateError } = await supabase
+      .from('books')
+      .update({ available_quantity: book.available_quantity - 1 })
+      .eq('id', bookId);
+    
+    if (updateError) {
+      console.error('Error updating book availability:', updateError);
+      return false;
+    }
+
+    setLoans(prev => [data, ...prev]);
     setBooks(prev => prev.map(b => 
-      b.id === livroId 
-        ? { ...b, quantidade_disponivel: b.quantidade_disponivel - 1 }
+      b.id === bookId 
+        ? { ...b, available_quantity: b.available_quantity - 1 }
         : b
     ));
 
     return true;
   }, [books]);
 
-  const returnBook = useCallback((loanId: string): boolean => {
+  const returnBook = useCallback(async (loanId: string): Promise<boolean> => {
     const loan = loans.find(l => l.id === loanId);
-    if (!loan || loan.data_devolucao) return false;
+    if (!loan || loan.actual_return_date) return false;
 
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = new Date().toISOString();
+
+    const { error } = await supabase
+      .from('loans')
+      .update({
+        actual_return_date: today,
+        status: 'devolvido',
+      })
+      .eq('id', loanId);
+    
+    if (error) {
+      console.error('Error returning book:', error);
+      return false;
+    }
+
+    // Update book availability
+    const book = books.find(b => b.id === loan.book_id);
+    if (book) {
+      const { error: updateError } = await supabase
+        .from('books')
+        .update({ available_quantity: book.available_quantity + 1 })
+        .eq('id', loan.book_id);
+      
+      if (updateError) {
+        console.error('Error updating book availability:', updateError);
+      }
+    }
 
     setLoans(prev => prev.map(l => 
       l.id === loanId 
-        ? { ...l, data_devolucao: today, status: 'devolvido' as const }
+        ? { ...l, actual_return_date: today, status: 'devolvido' as const }
         : l
     ));
 
-    setBooks(prev => prev.map(b => 
-      b.id === loan.livro_id 
-        ? { ...b, quantidade_disponivel: b.quantidade_disponivel + 1 }
-        : b
-    ));
+    if (book) {
+      setBooks(prev => prev.map(b => 
+        b.id === loan.book_id 
+          ? { ...b, available_quantity: b.available_quantity + 1 }
+          : b
+      ));
+    }
 
     return true;
-  }, [loans]);
+  }, [loans, books]);
 
   const getDashboardStats = useCallback((): DashboardStats => {
     const today = new Date();
-    const activeLoans = loans.filter(l => !l.data_devolucao);
+    const activeLoans = loans.filter(l => !l.actual_return_date);
     const overdueLoans = activeLoans.filter(l => 
-      isBefore(parseISO(l.data_prevista_devolucao), today)
+      isBefore(parseISO(l.expected_return_date), today)
     );
 
-    const totalBorrowed = books.reduce((acc, b) => acc + (b.quantidade_total - b.quantidade_disponivel), 0);
+    const totalBorrowed = books.reduce((acc, b) => acc + (b.total_quantity - b.available_quantity), 0);
 
     return {
-      totalLivros: books.reduce((acc, b) => acc + b.quantidade_total, 0),
-      livrosDisponiveis: books.reduce((acc, b) => acc + b.quantidade_disponivel, 0),
+      totalLivros: books.reduce((acc, b) => acc + b.total_quantity, 0),
+      livrosDisponiveis: books.reduce((acc, b) => acc + b.available_quantity, 0),
       livrosEmprestados: totalBorrowed,
       emprestimosAtrasados: overdueLoans.length,
     };
@@ -200,15 +255,15 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     if (query) {
       const lowerQuery = query.toLowerCase();
       filtered = filtered.filter(book => 
-        book.titulo.toLowerCase().includes(lowerQuery) ||
-        book.autor.toLowerCase().includes(lowerQuery)
+        book.title.toLowerCase().includes(lowerQuery) ||
+        book.author.toLowerCase().includes(lowerQuery)
       );
     }
 
     if (filter === 'available') {
-      filtered = filtered.filter(book => book.quantidade_disponivel > 0);
+      filtered = filtered.filter(book => book.available_quantity > 0);
     } else if (filter === 'borrowed') {
-      filtered = filtered.filter(book => book.quantidade_disponivel < book.quantidade_total);
+      filtered = filtered.filter(book => book.available_quantity < book.total_quantity);
     }
 
     return filtered;
@@ -218,35 +273,27 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     const today = new Date();
     
     return loans.map(loan => {
-      const livro = books.find(b => b.id === loan.livro_id);
-      
       let status = loan.status;
-      if (!loan.data_devolucao && isBefore(parseISO(loan.data_prevista_devolucao), today)) {
+      if (!loan.actual_return_date && isBefore(parseISO(loan.expected_return_date), today)) {
         status = 'atrasado';
       }
 
       return {
         ...loan,
         status,
-        livro,
       };
-    }).sort((a, b) => new Date(b.data_emprestimo).getTime() - new Date(a.data_emprestimo).getTime());
-  }, [loans, books]);
+    }).sort((a, b) => new Date(b.loan_date).getTime() - new Date(a.loan_date).getTime());
+  }, [loans]);
 
   const getActiveLoan = useCallback((loanId: string): Loan | undefined => {
-    const loan = loans.find(l => l.id === loanId);
-    if (!loan) return undefined;
-
-    return {
-      ...loan,
-      livro: books.find(b => b.id === loan.livro_id),
-    };
-  }, [loans, books]);
+    return loans.find(l => l.id === loanId);
+  }, [loans]);
 
   return (
     <LibraryContext.Provider value={{
       books,
       loans,
+      loading,
       addBook,
       updateBook,
       deleteBook,
@@ -256,6 +303,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       searchBooks,
       getLoanHistory,
       getActiveLoan,
+      refreshData,
     }}>
       {children}
     </LibraryContext.Provider>

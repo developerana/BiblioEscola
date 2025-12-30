@@ -27,49 +27,65 @@ import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 
 export default function Returns() {
-  const { getLoanHistory, returnBook, getActiveLoan } = useLibrary();
+  const { getLoanHistory, returnBook, getActiveLoan, loading } = useLibrary();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('oldest');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const activeLoans = getLoanHistory().filter(loan => !loan.data_devolucao);
+  const activeLoans = getLoanHistory().filter(loan => !loan.actual_return_date);
   const today = new Date();
 
   const filteredLoans = activeLoans
     .filter(loan =>
-      loan.livro?.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno_nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.aluno_turma.toLowerCase().includes(searchQuery.toLowerCase())
+      loan.book?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.student_class.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
-      const dateA = parseISO(a.data_emprestimo).getTime();
-      const dateB = parseISO(b.data_emprestimo).getTime();
+      const dateA = parseISO(a.loan_date).getTime();
+      const dateB = parseISO(b.loan_date).getTime();
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
-  const handleReturn = (loanId: string) => {
-    const success = returnBook(loanId);
-    
-    if (success) {
-      const loan = getActiveLoan(loanId);
-      toast({
-        title: 'Devolução registrada',
-        description: `"${loan?.livro?.titulo}" devolvido com sucesso.`,
-      });
-    } else {
-      toast({
-        title: 'Erro ao registrar devolução',
-        description: 'Este livro já foi devolvido ou dados inválidos.',
-        variant: 'destructive',
-      });
+  const handleReturn = async (loanId: string) => {
+    setIsSubmitting(true);
+    try {
+      const success = await returnBook(loanId);
+      
+      if (success) {
+        const loan = getActiveLoan(loanId);
+        toast({
+          title: 'Devolução registrada',
+          description: `"${loan?.book?.title}" devolvido com sucesso.`,
+        });
+      } else {
+        toast({
+          title: 'Erro ao registrar devolução',
+          description: 'Este livro já foi devolvido ou dados inválidos.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+      setConfirmDialog(null);
     }
-    
-    setConfirmDialog(null);
   };
 
   const selectedLoan = confirmDialog ? getActiveLoan(confirmDialog) : null;
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <PageHeader title="Devoluções" description="Registre a devolução de livros emprestados" />
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -127,12 +143,12 @@ export default function Returns() {
           : "flex flex-col gap-3"
         }>
           {filteredLoans.map((loan, index) => {
-            const isOverdue = isBefore(parseISO(loan.data_prevista_devolucao), today);
+            const isOverdue = isBefore(parseISO(loan.expected_return_date), today);
             const daysOverdue = isOverdue 
-              ? differenceInDays(today, parseISO(loan.data_prevista_devolucao))
+              ? differenceInDays(today, parseISO(loan.expected_return_date))
               : 0;
             const daysRemaining = !isOverdue 
-              ? differenceInDays(parseISO(loan.data_prevista_devolucao), today)
+              ? differenceInDays(parseISO(loan.expected_return_date), today)
               : 0;
 
             if (viewMode === 'list') {
@@ -148,23 +164,23 @@ export default function Returns() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="font-display font-semibold truncate">
-                          {loan.livro?.titulo || 'Livro não encontrado'}
+                          {loan.book?.title || 'Livro não encontrado'}
                         </h3>
                         <StatusBadge status={isOverdue ? 'atrasado' : 'emprestado'} />
                       </div>
-                      <p className="text-sm text-muted-foreground">{loan.livro?.autor}</p>
+                      <p className="text-sm text-muted-foreground">{loan.book?.author}</p>
                     </div>
 
                     <div className="flex items-center gap-4 text-sm">
                       <div className="rounded-lg bg-muted/50 px-3 py-2">
-                        <p className="font-medium">{loan.aluno_nome}</p>
-                        <p className="text-xs text-muted-foreground">Turma: {loan.aluno_turma}</p>
+                        <p className="font-medium">{loan.student_name}</p>
+                        <p className="text-xs text-muted-foreground">Turma: {loan.student_class}</p>
                       </div>
 
                       <div className="hidden md:block text-right">
                         <p className="text-muted-foreground text-xs">Devolução prevista</p>
                         <p className={isOverdue ? 'text-destructive font-medium' : ''}>
-                          {format(parseISO(loan.data_prevista_devolucao), 'dd/MM/yyyy')}
+                          {format(parseISO(loan.expected_return_date), 'dd/MM/yyyy')}
                         </p>
                       </div>
 
@@ -210,30 +226,30 @@ export default function Returns() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-semibold text-lg truncate">
-                        {loan.livro?.titulo || 'Livro não encontrado'}
+                        {loan.book?.title || 'Livro não encontrado'}
                       </h3>
-                      <p className="text-muted-foreground text-sm">{loan.livro?.autor}</p>
+                      <p className="text-muted-foreground text-sm">{loan.book?.author}</p>
                     </div>
                     <StatusBadge status={isOverdue ? 'atrasado' : 'emprestado'} />
                   </div>
 
                   <div className="space-y-3 mb-4">
                     <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-sm font-medium">{loan.aluno_nome}</p>
+                      <p className="text-sm font-medium">{loan.student_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Turma: {loan.aluno_turma}
+                        Turma: {loan.student_class}
                       </p>
                     </div>
 
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Emprestado em</span>
-                        <span>{format(parseISO(loan.data_emprestimo), 'dd/MM/yyyy')}</span>
+                        <span>{format(parseISO(loan.loan_date), 'dd/MM/yyyy')}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Devolução prevista</span>
                         <span className={isOverdue ? 'text-destructive font-medium' : ''}>
-                          {format(parseISO(loan.data_prevista_devolucao), 'dd/MM/yyyy')}
+                          {format(parseISO(loan.expected_return_date), 'dd/MM/yyyy')}
                         </span>
                       </div>
                     </div>
@@ -282,14 +298,14 @@ export default function Returns() {
           {selectedLoan && (
             <div className="space-y-4 py-4">
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-medium mb-2">{selectedLoan.livro?.titulo}</h4>
-                <p className="text-sm text-muted-foreground">{selectedLoan.livro?.autor}</p>
+                <h4 className="font-medium mb-2">{selectedLoan.book?.title}</h4>
+                <p className="text-sm text-muted-foreground">{selectedLoan.book?.author}</p>
               </div>
               
               <div className="rounded-lg border border-border p-4">
-                <h4 className="font-medium mb-2">{selectedLoan.aluno_nome}</h4>
+                <h4 className="font-medium mb-2">{selectedLoan.student_name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  Turma: {selectedLoan.aluno_turma}
+                  Turma: {selectedLoan.student_class}
                 </p>
               </div>
 
@@ -309,8 +325,9 @@ export default function Returns() {
             <Button 
               className="bg-gradient-primary hover:opacity-90"
               onClick={() => confirmDialog && handleReturn(confirmDialog)}
+              disabled={isSubmitting}
             >
-              Confirmar Devolução
+              {isSubmitting ? 'Registrando...' : 'Confirmar Devolução'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, BookPlus, AlertTriangle, TrendingUp, Plus, Clock, Users } from 'lucide-react';
+import { BookOpen, BookPlus, AlertTriangle, TrendingUp, Plus, Clock } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
@@ -11,51 +11,56 @@ import { Label } from '@/components/ui/label';
 import { useLibrary } from '@/contexts/LibraryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, parseISO, isBefore } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const { getDashboardStats, getLoanHistory, books, addBook } = useLibrary();
-  const { canManageBooks, user } = useAuth();
+  const { getDashboardStats, getLoanHistory, addBook, loading } = useLibrary();
+  const { canManageBooks } = useAuth();
   const stats = getDashboardStats();
   const recentLoans = getLoanHistory().slice(0, 5);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    titulo: '',
-    autor: '',
-    editora: '',
-    data_cadastro: format(new Date(), 'yyyy-MM-dd'),
-    quantidade_total: 1,
+    title: '',
+    author: '',
+    publisher: '',
+    total_quantity: 1,
     status: 'disponivel' as 'disponivel' | 'emprestado',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.titulo.trim() || !formData.autor.trim()) {
+    if (!formData.title.trim() || !formData.author.trim()) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    addBook({
-      titulo: formData.titulo.trim(),
-      autor: formData.autor.trim(),
-      editora: formData.editora.trim(),
-      categoria: '',
-      quantidade_total: formData.quantidade_total,
-      quantidade_disponivel: formData.status === 'disponivel' ? formData.quantidade_total : 0,
-      data_cadastro: formData.data_cadastro,
-    });
+    setIsSubmitting(true);
+    try {
+      const success = await addBook({
+        title: formData.title.trim(),
+        author: formData.author.trim(),
+        publisher: formData.publisher.trim() || null,
+        total_quantity: formData.total_quantity,
+        available_quantity: formData.status === 'disponivel' ? formData.total_quantity : 0,
+      });
 
-    toast.success('Livro cadastrado com sucesso!');
-    setFormData({
-      titulo: '',
-      autor: '',
-      editora: '',
-      data_cadastro: format(new Date(), 'yyyy-MM-dd'),
-      quantidade_total: 1,
-      status: 'disponivel',
-    });
+      if (success) {
+        toast.success('Livro cadastrado com sucesso!');
+        setFormData({
+          title: '',
+          author: '',
+          publisher: '',
+          total_quantity: 1,
+          status: 'disponivel',
+        });
+      } else {
+        toast.error('Erro ao cadastrar livro');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -105,49 +110,40 @@ export default function Dashboard() {
           <CardContent>
             <form onSubmit={handleSubmit} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="titulo">Título do Livro *</Label>
+                <Label htmlFor="title">Título do Livro *</Label>
                 <Input
-                  id="titulo"
+                  id="title"
                   placeholder="Digite o título"
-                  value={formData.titulo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, titulo: e.target.value }))}
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="autor">Autor *</Label>
+                <Label htmlFor="author">Autor *</Label>
                 <Input
-                  id="autor"
+                  id="author"
                   placeholder="Nome do autor"
-                  value={formData.autor}
-                  onChange={(e) => setFormData(prev => ({ ...prev, autor: e.target.value }))}
+                  value={formData.author}
+                  onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editora">Editora</Label>
+                <Label htmlFor="publisher">Editora</Label>
                 <Input
-                  id="editora"
+                  id="publisher"
                   placeholder="Nome da editora"
-                  value={formData.editora}
-                  onChange={(e) => setFormData(prev => ({ ...prev, editora: e.target.value }))}
+                  value={formData.publisher}
+                  onChange={(e) => setFormData(prev => ({ ...prev, publisher: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="data_cadastro">Data de Cadastro</Label>
+                <Label htmlFor="quantity">Quantidade Total</Label>
                 <Input
-                  id="data_cadastro"
-                  type="date"
-                  value={formData.data_cadastro}
-                  onChange={(e) => setFormData(prev => ({ ...prev, data_cadastro: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantidade">Quantidade Total</Label>
-                <Input
-                  id="quantidade"
+                  id="quantity"
                   type="number"
                   min="1"
-                  value={formData.quantidade_total}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quantidade_total: parseInt(e.target.value) || 1 }))}
+                  value={formData.total_quantity}
+                  onChange={(e) => setFormData(prev => ({ ...prev, total_quantity: parseInt(e.target.value) || 1 }))}
                 />
               </div>
               <div className="space-y-2">
@@ -172,9 +168,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-end pt-4">
-                <Button type="submit" className="bg-gradient-primary hover:opacity-90">
+                <Button type="submit" className="bg-gradient-primary hover:opacity-90" disabled={isSubmitting}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Cadastrar Livro
+                  {isSubmitting ? 'Cadastrando...' : 'Cadastrar Livro'}
                 </Button>
               </div>
             </form>
@@ -189,15 +185,19 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {recentLoans.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : recentLoans.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
                 Nenhum empréstimo registrado ainda.
               </p>
             ) : (
               <div className="space-y-4">
                 {recentLoans.map((loan) => {
-                  const isOverdue = loan.data_prevista_devolucao && !loan.data_devolucao && 
-                    isBefore(parseISO(loan.data_prevista_devolucao), new Date());
+                  const isOverdue = loan.expected_return_date && !loan.actual_return_date && 
+                    isBefore(parseISO(loan.expected_return_date), new Date());
                   
                   return (
                     <div 
@@ -205,17 +205,17 @@ export default function Dashboard() {
                       className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-muted/50 border border-border"
                     >
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate text-sm sm:text-base">{loan.livro?.titulo || 'Livro não encontrado'}</h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{loan.aluno_nome} - Turma: {loan.aluno_turma}</p>
+                        <h4 className="font-medium truncate text-sm sm:text-base">{loan.book?.title || 'Livro não encontrado'}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{loan.student_name} - Turma: {loan.student_class}</p>
                       </div>
                       <div className="flex items-center gap-3 justify-between sm:justify-end">
                         <div className="text-right text-sm">
                           <p className="text-muted-foreground">
-                            {format(parseISO(loan.data_emprestimo), 'dd/MM/yyyy')}
+                            {format(parseISO(loan.loan_date), 'dd/MM/yyyy')}
                           </p>
                         </div>
                         <StatusBadge 
-                          status={loan.data_devolucao ? 'devolvido' : (isOverdue ? 'atrasado' : 'emprestado')} 
+                          status={loan.actual_return_date ? 'devolvido' : (isOverdue ? 'atrasado' : 'emprestado')} 
                         />
                       </div>
                     </div>
