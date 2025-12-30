@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole;
+  userName: string | null;
   isAdmin: boolean;
   canManageBooks: boolean;
   mustChangePassword: boolean;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -38,14 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data?.role as AppRole || null;
   };
 
-  const fetchMustChangePassword = async (userId: string) => {
+  const fetchProfileData = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('must_change_password')
+      .select('must_change_password, name')
       .eq('user_id', userId)
       .single();
     
-    return data?.must_change_password ?? false;
+    return {
+      mustChangePassword: data?.must_change_password ?? false,
+      name: data?.name ?? null
+    };
   };
 
   useEffect(() => {
@@ -55,19 +60,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role and password check fetching with setTimeout
+        // Defer role and profile data fetching with setTimeout
         if (session?.user) {
           setTimeout(async () => {
-            const [userRole, needsPasswordChange] = await Promise.all([
+            const [userRole, profileData] = await Promise.all([
               fetchUserRole(session.user.id),
-              fetchMustChangePassword(session.user.id)
+              fetchProfileData(session.user.id)
             ]);
             setRole(userRole);
-            setMustChangePassword(needsPasswordChange);
+            setUserName(profileData.name);
+            setMustChangePassword(profileData.mustChangePassword);
             setLoading(false);
           }, 0);
         } else {
           setRole(null);
+          setUserName(null);
           setMustChangePassword(false);
           setLoading(false);
         }
@@ -82,10 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         Promise.all([
           fetchUserRole(session.user.id),
-          fetchMustChangePassword(session.user.id)
-        ]).then(([userRole, needsPasswordChange]) => {
+          fetchProfileData(session.user.id)
+        ]).then(([userRole, profileData]) => {
           setRole(userRole);
-          setMustChangePassword(needsPasswordChange);
+          setUserName(profileData.name);
+          setMustChangePassword(profileData.mustChangePassword);
           setLoading(false);
         });
       } else {
@@ -128,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    setUserName(null);
     setMustChangePassword(false);
   };
 
@@ -142,7 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{ 
       user, 
       session, 
-      role, 
+      role,
+      userName,
       isAdmin,
       canManageBooks,
       mustChangePassword,
