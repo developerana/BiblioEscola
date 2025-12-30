@@ -25,14 +25,13 @@ import { Label } from '@/components/ui/label';
 import { useLibrary } from '@/contexts/LibraryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 import { Book } from '@/types/library';
 import { DeleteBookDialog } from '@/components/books/DeleteBookDialog';
 
 const ITEMS_PER_PAGE = 30;
 
 export default function Books() {
-  const { books, searchBooks, addBook, updateBook, deleteBook } = useLibrary();
+  const { books, searchBooks, addBook, updateBook, deleteBook, loading } = useLibrary();
   const { canManageBooks } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,12 +43,13 @@ export default function Books() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredBooks = searchBooks(searchQuery, filter);
   
   const sortedBooks = [...filteredBooks].sort((a, b) => {
-    if (sortOrder === 'az') return a.titulo.localeCompare(b.titulo, 'pt-BR');
-    if (sortOrder === 'za') return b.titulo.localeCompare(a.titulo, 'pt-BR');
+    if (sortOrder === 'az') return a.title.localeCompare(b.title, 'pt-BR');
+    if (sortOrder === 'za') return b.title.localeCompare(a.title, 'pt-BR');
     return 0;
   });
   
@@ -59,24 +59,23 @@ export default function Books() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filter, sortOrder]);
 
   const [formData, setFormData] = useState({
-    titulo: '',
-    autor: '',
-    editora: '',
-    quantidade_total: 1,
+    title: '',
+    author: '',
+    publisher: '',
+    total_quantity: 1,
   });
 
   const resetForm = () => {
     setFormData({
-      titulo: '',
-      autor: '',
-      editora: '',
-      quantidade_total: 1,
+      title: '',
+      author: '',
+      publisher: '',
+      total_quantity: 1,
     });
     setEditingBook(null);
   };
@@ -85,10 +84,10 @@ export default function Books() {
     if (book) {
       setEditingBook(book);
       setFormData({
-        titulo: book.titulo,
-        autor: book.autor,
-        editora: book.editora,
-        quantidade_total: book.quantidade_total,
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher || '',
+        total_quantity: book.total_quantity,
       });
     } else {
       resetForm();
@@ -96,38 +95,57 @@ export default function Books() {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    if (editingBook) {
-      const diff = formData.quantidade_total - editingBook.quantidade_total;
-      updateBook(editingBook.id, {
-        ...formData,
-        quantidade_disponivel: Math.max(0, editingBook.quantidade_disponivel + diff),
-      });
-      toast({
-        title: 'Livro atualizado',
-        description: `"${formData.titulo}" foi atualizado com sucesso.`,
-      });
-    } else {
-      addBook({
-        ...formData,
-        categoria: '',
-        quantidade_disponivel: formData.quantidade_total,
-        data_cadastro: format(new Date(), 'yyyy-MM-dd'),
-      });
-      toast({
-        title: 'Livro cadastrado',
-        description: `"${formData.titulo}" foi adicionado ao acervo.`,
-      });
+    try {
+      if (editingBook) {
+        const diff = formData.total_quantity - editingBook.total_quantity;
+        const success = await updateBook(editingBook.id, {
+          ...formData,
+          available_quantity: Math.max(0, editingBook.available_quantity + diff),
+        });
+        if (success) {
+          toast({
+            title: 'Livro atualizado',
+            description: `"${formData.title}" foi atualizado com sucesso.`,
+          });
+        } else {
+          toast({
+            title: 'Erro ao atualizar',
+            description: 'Não foi possível atualizar o livro.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        const success = await addBook({
+          ...formData,
+          available_quantity: formData.total_quantity,
+        });
+        if (success) {
+          toast({
+            title: 'Livro cadastrado',
+            description: `"${formData.title}" foi adicionado ao acervo.`,
+          });
+        } else {
+          toast({
+            title: 'Erro ao cadastrar',
+            description: 'Não foi possível cadastrar o livro.',
+            variant: 'destructive',
+          });
+        }
+      }
+      
+      setIsDialogOpen(false);
+      resetForm();
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsDialogOpen(false);
-    resetForm();
   };
 
   const handleDeleteClick = (book: Book) => {
-    if (book.quantidade_total !== book.quantidade_disponivel) {
+    if (book.total_quantity !== book.available_quantity) {
       toast({
         title: 'Não é possível excluir',
         description: 'Este livro possui exemplares emprestados.',
@@ -140,14 +158,33 @@ export default function Books() {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = (book: Book) => {
-    deleteBook(book.id);
-    toast({
-      title: 'Livro excluído',
-      description: `"${book.titulo}" foi removido do acervo.`,
-    });
+  const handleConfirmDelete = async (book: Book) => {
+    const success = await deleteBook(book.id);
+    if (success) {
+      toast({
+        title: 'Livro excluído',
+        description: `"${book.title}" foi removido do acervo.`,
+      });
+    } else {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Não foi possível excluir o livro.',
+        variant: 'destructive',
+      });
+    }
     setBookToDelete(null);
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <PageHeader title="Livros" description="Gerencie o acervo da biblioteca" />
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -168,40 +205,39 @@ export default function Books() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="titulo">Título</Label>
+                <Label htmlFor="title">Título</Label>
                 <Input
-                  id="titulo"
-                  value={formData.titulo}
-                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="autor">Autor</Label>
+                <Label htmlFor="author">Autor</Label>
                 <Input
-                  id="autor"
-                  value={formData.autor}
-                  onChange={(e) => setFormData({ ...formData, autor: e.target.value })}
+                  id="author"
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editora">Editora</Label>
+                <Label htmlFor="publisher">Editora</Label>
                 <Input
-                  id="editora"
-                  value={formData.editora}
-                  onChange={(e) => setFormData({ ...formData, editora: e.target.value })}
-                  required
+                  id="publisher"
+                  value={formData.publisher}
+                  onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quantidade">Quantidade Total</Label>
+                <Label htmlFor="quantity">Quantidade Total</Label>
                 <Input
-                  id="quantidade"
+                  id="quantity"
                   type="number"
-                  min={editingBook ? editingBook.quantidade_total - editingBook.quantidade_disponivel : 1}
-                  value={formData.quantidade_total}
-                  onChange={(e) => setFormData({ ...formData, quantidade_total: parseInt(e.target.value) })}
+                  min={editingBook ? editingBook.total_quantity - editingBook.available_quantity : 1}
+                  value={formData.total_quantity}
+                  onChange={(e) => setFormData({ ...formData, total_quantity: parseInt(e.target.value) })}
                   required
                 />
               </div>
@@ -209,8 +245,8 @@ export default function Books() {
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="flex-1 bg-gradient-primary hover:opacity-90">
-                  {editingBook ? 'Salvar' : 'Cadastrar'}
+                <Button type="submit" className="flex-1 bg-gradient-primary hover:opacity-90" disabled={isSubmitting}>
+                  {isSubmitting ? 'Salvando...' : editingBook ? 'Salvar' : 'Cadastrar'}
                 </Button>
               </div>
             </form>
@@ -303,22 +339,22 @@ export default function Books() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold text-lg truncate">{book.titulo}</h3>
-                    <p className="text-muted-foreground text-sm">{book.autor}</p>
+                    <h3 className="font-display font-semibold text-lg truncate">{book.title}</h3>
+                    <p className="text-muted-foreground text-sm">{book.author}</p>
                   </div>
                   <StatusBadge 
-                    status={book.quantidade_disponivel > 0 ? 'disponivel' : 'emprestado'} 
+                    status={book.available_quantity > 0 ? 'disponivel' : 'emprestado'} 
                   />
                 </div>
                 
                 <div className="space-y-2 text-sm mb-4">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Editora</span>
-                    <span className="font-medium">{book.editora}</span>
+                    <span className="font-medium">{book.publisher || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Disponíveis</span>
-                    <span className="font-medium">{book.quantidade_disponivel} / {book.quantidade_total}</span>
+                    <span className="font-medium">{book.available_quantity} / {book.total_quantity}</span>
                   </div>
                 </div>
 
@@ -363,18 +399,18 @@ export default function Books() {
                       <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold truncate text-sm sm:text-base">{book.titulo}</h3>
-                      <p className="text-muted-foreground text-xs sm:text-sm truncate">{book.autor} • {book.editora}</p>
+                      <h3 className="font-display font-semibold truncate text-sm sm:text-base">{book.title}</h3>
+                      <p className="text-muted-foreground text-xs sm:text-sm truncate">{book.author} • {book.publisher || '-'}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
                     <div className="text-left sm:text-right">
-                      <p className="text-sm font-medium">{book.quantidade_disponivel} / {book.quantidade_total}</p>
+                      <p className="text-sm font-medium">{book.available_quantity} / {book.total_quantity}</p>
                       <p className="text-xs text-muted-foreground">disponíveis</p>
                     </div>
                     <StatusBadge 
-                      status={book.quantidade_disponivel > 0 ? 'disponivel' : 'emprestado'} 
+                      status={book.available_quantity > 0 ? 'disponivel' : 'emprestado'} 
                     />
                     {canManageBooks && (
                       <div className="flex gap-1">

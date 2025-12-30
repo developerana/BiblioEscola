@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      books: {
+        Row: {
+          author: string
+          available_quantity: number
+          created_at: string
+          id: string
+          publisher: string | null
+          title: string
+          total_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          available_quantity?: number
+          created_at?: string
+          id?: string
+          publisher?: string | null
+          title: string
+          total_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          available_quantity?: number
+          created_at?: string
+          id?: string
+          publisher?: string | null
+          title?: string
+          total_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          actual_return_date: string | null
+          book_id: string
+          created_at: string
+          created_by: string | null
+          expected_return_date: string
+          id: string
+          loan_date: string
+          status: string
+          student_class: string
+          student_name: string
+        }
+        Insert: {
+          actual_return_date?: string | null
+          book_id: string
+          created_at?: string
+          created_by?: string | null
+          expected_return_date: string
+          id?: string
+          loan_date?: string
+          status?: string
+          student_class: string
+          student_name: string
+        }
+        Update: {
+          actual_return_date?: string | null
+          book_id?: string
+          created_at?: string
+          created_by?: string | null
+          expected_return_date?: string
+          id?: string
+          loan_date?: string
+          status?: string
+          student_class?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loans_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

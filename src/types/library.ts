@@ -1,28 +1,27 @@
 export interface Book {
   id: string;
-  titulo: string;
-  autor: string;
-  editora: string;
-  categoria: string;
-  quantidade_total: number;
-  quantidade_disponivel: number;
-  data_cadastro: string;
-  created_at?: string;
+  title: string;
+  author: string;
+  publisher: string | null;
+  total_quantity: number;
+  available_quantity: number;
+  created_at: string;
+  updated_at: string;
 }
-
 
 export interface Loan {
   id: string;
-  livro_id: string;
-  aluno_nome: string;
-  aluno_turma: string;
-  data_emprestimo: string;
-  data_prevista_devolucao: string;
-  data_devolucao: string | null;
+  book_id: string;
+  student_name: string;
+  student_class: string;
+  loan_date: string;
+  expected_return_date: string;
+  actual_return_date: string | null;
   status: 'emprestado' | 'devolvido' | 'atrasado';
-  created_at?: string;
+  created_by: string | null;
+  created_at: string;
   // Joined fields
-  livro?: Book;
+  book?: Book;
 }
 
 export interface DashboardStats {
