@@ -83,41 +83,49 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Título - campo em destaque */}
               <div className="space-y-2">
                 <Label htmlFor="title">Título do Livro *</Label>
-                <Input id="title" placeholder="Digite o título" value={formData.title} onChange={e => setFormData(prev => ({
-              ...prev,
-              title: e.target.value
-            }))} />
+                <Input id="title" placeholder="Digite o título do livro" value={formData.title} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  title: e.target.value
+                }))} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="author">Autor *</Label>
-                <Input id="author" placeholder="Nome do autor" value={formData.author} onChange={e => setFormData(prev => ({
-              ...prev,
-              author: e.target.value
-            }))} />
+
+              {/* Autor e Editora - lado a lado */}
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="author">Autor *</Label>
+                  <Input id="author" placeholder="Nome do autor" value={formData.author} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    author: e.target.value
+                  }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="publisher">Editora</Label>
+                  <Input id="publisher" placeholder="Nome da editora" value={formData.publisher} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    publisher: e.target.value
+                  }))} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="publisher">Editora</Label>
-                <Input id="publisher" placeholder="Nome da editora" value={formData.publisher} onChange={e => setFormData(prev => ({
-              ...prev,
-              publisher: e.target.value
-            }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantidade Total</Label>
-                <Input id="quantity" type="number" min="1" value={formData.total_quantity} onChange={e => setFormData(prev => ({
-              ...prev,
-              total_quantity: parseInt(e.target.value) || 1
-            }))} />
-              </div>
-              
-              <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-end pt-4">
-                <Button type="submit" className="bg-gradient-primary hover:opacity-90" disabled={isSubmitting}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {isSubmitting ? 'Cadastrando...' : 'Cadastrar Livro'}
-                </Button>
+
+              {/* Quantidade e Botão - lado a lado */}
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="space-y-2 w-full sm:w-40">
+                  <Label htmlFor="quantity">Quantidade</Label>
+                  <Input id="quantity" type="number" min="1" value={formData.total_quantity} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    total_quantity: parseInt(e.target.value) || 1
+                  }))} />
+                </div>
+                <div className="flex-1 flex justify-end">
+                  <Button type="submit" className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto" disabled={isSubmitting}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {isSubmitting ? 'Cadastrando...' : 'Cadastrar Livro'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
