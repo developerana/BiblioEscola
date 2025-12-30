@@ -88,16 +88,19 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
             <NavLink
               key={item.to}
               to={item.to}
-              onClick={handleNavClick}
+              onClick={(e) => {
+                if ('vibrate' in navigator) navigator.vibrate(5);
+                handleNavClick();
+              }}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200',
+                'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 ease-out active:scale-[0.98] touch-manipulation',
                 isActive 
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm' 
-                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground active:bg-sidebar-accent/70'
               )}
             >
               <item.icon className={cn(
-                'h-5 w-5 transition-colors',
+                'h-5 w-5 transition-colors duration-200',
                 isActive ? 'text-sidebar-primary' : ''
               )} />
               {item.label}
