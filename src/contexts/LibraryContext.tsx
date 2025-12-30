@@ -44,8 +44,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       .from('loans')
       .select(`
         *,
-        book:books(*),
-        created_by_profile:profiles!loans_created_by_fkey(name, email)
+        book:books(*)
       `)
       .order('created_at', { ascending: false });
     
@@ -53,10 +52,29 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching loans:', error);
       return [];
     }
+
+    // Fetch profiles for created_by users
+    const creatorIds = [...new Set((data || []).map(l => l.created_by).filter(Boolean))];
+    let profilesMap: Record<string, { name: string | null; email: string }> = {};
+    
+    if (creatorIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, name, email')
+        .in('user_id', creatorIds);
+      
+      if (profiles) {
+        profilesMap = profiles.reduce((acc, p) => {
+          acc[p.user_id] = { name: p.name, email: p.email };
+          return acc;
+        }, {} as Record<string, { name: string | null; email: string }>);
+      }
+    }
+
     return (data || []).map(loan => ({
       ...loan,
       status: loan.status as 'emprestado' | 'devolvido' | 'atrasado',
-      created_by_profile: loan.created_by_profile as { name: string | null; email: string } | null,
+      created_by_profile: loan.created_by ? profilesMap[loan.created_by] || null : null,
     }));
   };
 
