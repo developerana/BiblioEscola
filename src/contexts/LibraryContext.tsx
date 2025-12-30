@@ -173,7 +173,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    setLoans(prev => [data, ...prev]);
+    setLoans(prev => [{
+      ...data,
+      status: data.status as 'emprestado' | 'devolvido' | 'atrasado',
+    }, ...prev]);
     setBooks(prev => prev.map(b => 
       b.id === bookId 
         ? { ...b, available_quantity: b.available_quantity - 1 }
