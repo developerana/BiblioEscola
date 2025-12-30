@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { KeyRound, User, Mail, AlertTriangle } from 'lucide-react';
 
 export default function Settings() {
-  const { user, role, mustChangePassword, clearMustChangePassword } = useAuth();
+  const { user, role, userName, mustChangePassword, clearMustChangePassword } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({
@@ -116,6 +116,13 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Nome</p>
+                <p className="font-medium">{userName || 'Não informado'}</p>
+              </div>
+            </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <Mail className="h-5 w-5 text-muted-foreground" />
               <div>
