@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLibrary } from '@/contexts/LibraryContext';
 import libraryBackground from '@/assets/library-background.jpg';
 
 export default function Login() {
@@ -15,6 +16,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user, loading } = useAuth();
+  const { refreshData } = useLibrary();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -42,7 +44,7 @@ export default function Login() {
       const { error } = await signIn(email, password);
       
       if (error) {
-        let message = 'Erro ao fazer login. Tente novamente.';
+        let message = error.message || 'Erro ao fazer login. Tente novamente.';
         if (error.message.includes('Invalid login credentials')) {
           message = 'Email ou senha inválidos.';
         }
@@ -52,6 +54,8 @@ export default function Login() {
           variant: 'destructive',
         });
       } else {
+        // Pre-fetch library data before navigating for instant loading
+        await refreshData();
         toast({
           title: 'Bem-vindo!',
           description: 'Login realizado com sucesso.',
