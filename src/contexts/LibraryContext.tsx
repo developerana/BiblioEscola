@@ -81,33 +81,37 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshData();
 
-    // Subscribe to real-time changes for books
-    const booksChannel = supabase
-      .channel('books-realtime')
+    // Single channel for all realtime updates - more efficient
+    const realtimeChannel = supabase
+      .channel('library-sync')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'books' },
-        () => {
-          fetchBooks().then(setBooks);
+        (payload) => {
+          // Optimistic update for immediate UI response
+          if (payload.eventType === 'INSERT') {
+            setBooks(prev => [payload.new as Book, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setBooks(prev => prev.map(book => 
+              book.id === (payload.new as Book).id ? payload.new as Book : book
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setBooks(prev => prev.filter(book => book.id !== (payload.old as Book).id));
+          }
         }
       )
-      .subscribe();
-
-    // Subscribe to real-time changes for loans
-    const loansChannel = supabase
-      .channel('loans-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'loans' },
         () => {
+          // Loans need profile data, so fetch fresh
           fetchLoansAndProfiles().then(setLoans);
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(booksChannel);
-      supabase.removeChannel(loansChannel);
+      supabase.removeChannel(realtimeChannel);
     };
   }, [refreshData]);
 
