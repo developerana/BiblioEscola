@@ -114,18 +114,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // Check if user is active
+    // Check if user is active and fetch role/profile in parallel for speed
     if (data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_active')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
+      const [profileResult, roleResult, profileDataResult] = await Promise.all([
+        supabase.from('profiles').select('is_active').eq('user_id', data.user.id).maybeSingle(),
+        fetchUserRole(data.user.id),
+        fetchProfileData(data.user.id)
+      ]);
       
-      if (profile && profile.is_active === false) {
+      if (profileResult.data && profileResult.data.is_active === false) {
         await supabase.auth.signOut();
         return { error: new Error('Sua conta está desativada. Entre em contato com o administrador.') };
       }
+
+      // Pre-set role and profile data immediately for instant UI update
+      setRole(roleResult);
+      setUserName(profileDataResult.name);
+      setMustChangePassword(profileDataResult.mustChangePassword);
     }
     
     return { error: null };

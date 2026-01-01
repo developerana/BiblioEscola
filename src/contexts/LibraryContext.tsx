@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
 import { Book, Loan, DashboardStats } from '@/types/library';
 import { supabase } from '@/integrations/supabase/client';
 import { format, addDays, isBefore, parseISO } from 'date-fns';
@@ -78,8 +78,31 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  const hasInitializedRef = useRef(false);
+
   useEffect(() => {
-    refreshData();
+    // Listen for auth state changes to trigger data loading immediately
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && !hasInitializedRef.current) {
+        hasInitializedRef.current = true;
+        refreshData();
+      } else if (!session) {
+        hasInitializedRef.current = false;
+        setBooks([]);
+        setLoans([]);
+        setLoading(false);
+      }
+    });
+
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && !hasInitializedRef.current) {
+        hasInitializedRef.current = true;
+        refreshData();
+      } else if (!session) {
+        setLoading(false);
+      }
+    });
 
     // Single channel for all realtime updates - more efficient
     const realtimeChannel = supabase
@@ -111,6 +134,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       .subscribe();
 
     return () => {
+      subscription.unsubscribe();
       supabase.removeChannel(realtimeChannel);
     };
   }, [refreshData]);
