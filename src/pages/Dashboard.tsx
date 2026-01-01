@@ -115,10 +115,18 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="space-y-2 w-full sm:w-40">
                   <Label htmlFor="quantity">Quantidade</Label>
-                  <Input id="quantity" type="number" min="1" value={formData.total_quantity} onChange={e => setFormData(prev => ({
-                    ...prev,
-                    total_quantity: parseInt(e.target.value) || 1
-                  }))} />
+                  <Input 
+                    id="quantity" 
+                    type="number" 
+                    inputMode="numeric"
+                    min="1" 
+                    max="9999"
+                    value={formData.total_quantity} 
+                    onChange={e => setFormData(prev => ({
+                      ...prev,
+                      total_quantity: parseInt(e.target.value) || 1
+                    }))} 
+                  />
                 </div>
                 <div className="flex-1 flex justify-end">
                   <Button type="submit" className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto" disabled={isSubmitting}>
