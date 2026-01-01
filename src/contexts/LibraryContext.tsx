@@ -39,39 +39,31 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     return data || [];
   };
 
-  const fetchLoans = async (): Promise<Loan[]> => {
-    const { data, error } = await supabase
-      .from('loans')
-      .select(`
-        *,
-        book:books(*)
-      `)
-      .order('created_at', { ascending: false });
+  const fetchLoansAndProfiles = async (): Promise<Loan[]> => {
+    // Fetch loans and profiles in parallel for speed
+    const [loansResult, profilesResult] = await Promise.all([
+      supabase
+        .from('loans')
+        .select(`*, book:books(*)`)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('profiles')
+        .select('user_id, name, email')
+    ]);
     
-    if (error) {
-      console.error('Error fetching loans:', error);
+    if (loansResult.error) {
+      console.error('Error fetching loans:', loansResult.error);
       return [];
     }
 
-    // Fetch profiles for created_by users
-    const creatorIds = [...new Set((data || []).map(l => l.created_by).filter(Boolean))];
-    let profilesMap: Record<string, { name: string | null; email: string }> = {};
-    
-    if (creatorIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, name, email')
-        .in('user_id', creatorIds);
-      
-      if (profiles) {
-        profilesMap = profiles.reduce((acc, p) => {
-          acc[p.user_id] = { name: p.name, email: p.email };
-          return acc;
-        }, {} as Record<string, { name: string | null; email: string }>);
-      }
+    const profilesMap: Record<string, { name: string | null; email: string }> = {};
+    if (profilesResult.data) {
+      profilesResult.data.forEach(p => {
+        profilesMap[p.user_id] = { name: p.name, email: p.email };
+      });
     }
 
-    return (data || []).map(loan => ({
+    return (loansResult.data || []).map(loan => ({
       ...loan,
       status: loan.status as 'emprestado' | 'devolvido' | 'atrasado',
       created_by_profile: loan.created_by ? profilesMap[loan.created_by] || null : null,
@@ -80,7 +72,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
   const refreshData = useCallback(async () => {
     setLoading(true);
-    const [booksData, loansData] = await Promise.all([fetchBooks(), fetchLoans()]);
+    const [booksData, loansData] = await Promise.all([fetchBooks(), fetchLoansAndProfiles()]);
     setBooks(booksData);
     setLoans(loansData);
     setLoading(false);
@@ -108,7 +100,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'loans' },
         () => {
-          fetchLoans().then(setLoans);
+          fetchLoansAndProfiles().then(setLoans);
         }
       )
       .subscribe();
