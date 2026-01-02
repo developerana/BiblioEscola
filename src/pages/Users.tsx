@@ -355,10 +355,10 @@ export default function Users() {
                             className={`
                               font-medium
                               ${userItem.role === 'admin' 
-                                ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
+                                ? 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800' 
                                 : userItem.role === 'bibliotecario' 
-                                  ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500' 
-                                  : 'bg-sky-500 hover:bg-sky-600 text-white border-sky-500'}
+                                  ? 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' 
+                                  : 'bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800'}
                             `}
                           >
                             {ROLE_LABELS[userItem.role || 'user']}
