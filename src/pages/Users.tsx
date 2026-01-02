@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, Loader2 } from 'lucide-react';
+import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, Loader2, RefreshCw } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -147,12 +147,17 @@ export default function Users() {
     }
   };
 
-  const handleUserAction = async (userId: string, action: 'activate' | 'deactivate' | 'delete') => {
+  const handleUserAction = async (userId: string, action: 'activate' | 'deactivate' | 'delete' | 'change_role', newRole?: 'bibliotecario' | 'user') => {
     setActionLoading(userId);
     
     try {
+      const body: { userId: string; action: string; newRole?: string } = { userId, action };
+      if (action === 'change_role' && newRole) {
+        body.newRole = newRole;
+      }
+
       const { data, error } = await supabase.functions.invoke('manage-user', {
-        body: { userId, action },
+        body,
       });
 
       if (error) throw error;
@@ -161,10 +166,11 @@ export default function Users() {
         throw new Error(data.error);
       }
 
-      const messages = {
+      const messages: Record<string, string> = {
         activate: 'Usuário ativado com sucesso',
         deactivate: 'Usuário desativado com sucesso',
         delete: 'Usuário excluído com sucesso',
+        change_role: data?.message || 'Função alterada com sucesso',
       };
 
       toast({
@@ -370,6 +376,34 @@ export default function Users() {
                         <TableCell>
                           {userItem.role !== 'admin' && (
                             <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
+                                    onClick={() => handleUserAction(
+                                      userItem.user_id, 
+                                      'change_role', 
+                                      userItem.role === 'bibliotecario' ? 'user' : 'bibliotecario'
+                                    )}
+                                    disabled={actionLoading === userItem.user_id}
+                                  >
+                                    {actionLoading === userItem.user_id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <RefreshCw className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {userItem.role === 'bibliotecario' 
+                                      ? 'Alterar para Usuário comum' 
+                                      : 'Alterar para Bibliotecário'}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   {userItem.is_active ? (

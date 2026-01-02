@@ -61,11 +61,19 @@ serve(async (req) => {
       );
     }
 
-    const { action, userId } = await req.json();
+    const { action, userId, newRole } = await req.json();
 
     if (!userId || !action) {
       return new Response(
         JSON.stringify({ error: "userId e action são obrigatórios" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate newRole if action is change_role
+    if (action === "change_role" && (!newRole || !["bibliotecario", "user"].includes(newRole))) {
+      return new Response(
+        JSON.stringify({ error: "newRole deve ser 'bibliotecario' ou 'user'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -162,6 +170,54 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, message: "Usuário e todos os seus dados foram excluídos com sucesso" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "change_role") {
+      console.log("Changing role for user:", userId, "to:", newRole);
+
+      // Check if user already has a role entry
+      const { data: existingRole } = await supabaseAdmin
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existingRole) {
+        // Update existing role
+        const { error: updateError } = await supabaseAdmin
+          .from("user_roles")
+          .update({ role: newRole })
+          .eq("user_id", userId);
+
+        if (updateError) {
+          console.error("Error updating user role:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao atualizar função do usuário" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else {
+        // Insert new role
+        const { error: insertError } = await supabaseAdmin
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole });
+
+        if (insertError) {
+          console.error("Error inserting user role:", insertError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao definir função do usuário" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      const roleLabel = newRole === "bibliotecario" ? "Bibliotecário" : "Usuário";
+      console.log("User role changed successfully to:", newRole);
+
+      return new Response(
+        JSON.stringify({ success: true, message: `Função alterada para ${roleLabel}` }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
