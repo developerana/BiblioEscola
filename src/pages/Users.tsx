@@ -40,6 +40,7 @@ export default function Users() {
   const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'bibliotecario' | 'user' } | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
@@ -188,6 +189,7 @@ export default function Users() {
     } finally {
       setActionLoading(null);
       setDeleteConfirm(null);
+      setRoleChangeConfirm(null);
     }
   };
 
@@ -382,11 +384,10 @@ export default function Users() {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 px-2.5 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
-                                    onClick={() => handleUserAction(
-                                      userItem.user_id, 
-                                      'change_role', 
-                                      userItem.role === 'bibliotecario' ? 'user' : 'bibliotecario'
-                                    )}
+                                    onClick={() => setRoleChangeConfirm({
+                                      user: userItem,
+                                      newRole: userItem.role === 'bibliotecario' ? 'user' : 'bibliotecario'
+                                    })}
                                     disabled={actionLoading === userItem.user_id}
                                   >
                                     {actionLoading === userItem.user_id ? (
@@ -487,6 +488,28 @@ export default function Users() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={!!roleChangeConfirm} onOpenChange={() => setRoleChangeConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar alteração de função</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja alterar a função de <strong>{roleChangeConfirm?.user.name || roleChangeConfirm?.user.email}</strong> de{' '}
+              <strong>{ROLE_LABELS[roleChangeConfirm?.user.role || 'user']}</strong> para{' '}
+              <strong>{ROLE_LABELS[roleChangeConfirm?.newRole || 'user']}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => roleChangeConfirm && handleUserAction(roleChangeConfirm.user.user_id, 'change_role', roleChangeConfirm.newRole)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
