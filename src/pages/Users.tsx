@@ -355,10 +355,10 @@ export default function Users() {
                             className={`
                               font-medium
                               ${userItem.role === 'admin' 
-                                ? 'bg-primary/90 hover:bg-primary' 
+                                ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
                                 : userItem.role === 'bibliotecario' 
-                                  ? 'border-accent/50 text-accent-foreground bg-accent/10' 
-                                  : 'border-muted-foreground/30'}
+                                  ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500' 
+                                  : 'bg-sky-500 hover:bg-sky-600 text-white border-sky-500'}
                             `}
                           >
                             {ROLE_LABELS[userItem.role || 'user']}
