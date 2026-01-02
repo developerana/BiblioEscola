@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, MoreHorizontal } from 'lucide-react';
+import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -369,44 +368,41 @@ export default function Users() {
                         </TableCell>
                         <TableCell>
                           {userItem.role !== 'admin' && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
+                            <div className="flex items-center gap-1">
+                              {userItem.is_active ? (
+                                <Button
+                                  variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 hover:bg-muted"
+                                  className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/30"
+                                  onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
                                   disabled={actionLoading === userItem.user_id}
+                                  title="Desativar usuário"
                                 >
-                                  <MoreHorizontal className="h-4 w-4" />
+                                  <UserX className="h-4 w-4" />
                                 </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                {userItem.is_active ? (
-                                  <DropdownMenuItem
-                                    onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
-                                    className="text-amber-600 dark:text-amber-400 focus:text-amber-600 dark:focus:text-amber-400"
-                                  >
-                                    <UserX className="h-4 w-4 mr-2" />
-                                    Desativar
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem
-                                    onClick={() => handleUserAction(userItem.user_id, 'activate')}
-                                    className="text-green-600 dark:text-green-400 focus:text-green-600 dark:focus:text-green-400"
-                                  >
-                                    <UserCheck className="h-4 w-4 mr-2" />
-                                    Ativar
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={() => setDeleteConfirm(userItem)}
-                                  className="text-destructive focus:text-destructive"
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
+                                  onClick={() => handleUserAction(userItem.user_id, 'activate')}
+                                  disabled={actionLoading === userItem.user_id}
+                                  title="Ativar usuário"
                                 >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                  <UserCheck className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteConfirm(userItem)}
+                                disabled={actionLoading === userItem.user_id}
+                                title="Excluir usuário"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
