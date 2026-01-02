@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck } from 'lucide-react';
+import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -368,40 +369,63 @@ export default function Users() {
                         </TableCell>
                         <TableCell>
                           {userItem.role !== 'admin' && (
-                            <div className="flex items-center gap-1">
-                              {userItem.is_active ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-100 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/30"
-                                  onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
-                                  disabled={actionLoading === userItem.user_id}
-                                  title="Desativar usuário"
-                                >
-                                  <UserX className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/30"
-                                  onClick={() => handleUserAction(userItem.user_id, 'activate')}
-                                  disabled={actionLoading === userItem.user_id}
-                                  title="Ativar usuário"
-                                >
-                                  <UserCheck className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => setDeleteConfirm(userItem)}
-                                disabled={actionLoading === userItem.user_id}
-                                title="Excluir usuário"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  {userItem.is_active ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 px-2.5 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400 dark:hover:bg-amber-900/50 transition-all duration-200"
+                                      onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
+                                      disabled={actionLoading === userItem.user_id}
+                                    >
+                                      {actionLoading === userItem.user_id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <UserX className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 px-2.5 border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-300 dark:border-green-800 dark:bg-green-950/50 dark:text-green-400 dark:hover:bg-green-900/50 transition-all duration-200"
+                                      onClick={() => handleUserAction(userItem.user_id, 'activate')}
+                                      disabled={actionLoading === userItem.user_id}
+                                    >
+                                      {actionLoading === userItem.user_id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <UserCheck className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{userItem.is_active ? 'Desativar usuário' : 'Ativar usuário'}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all duration-200"
+                                    onClick={() => setDeleteConfirm(userItem)}
+                                    disabled={actionLoading === userItem.user_id}
+                                  >
+                                    {actionLoading === userItem.user_id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Excluir usuário</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           )}
                         </TableCell>
