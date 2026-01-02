@@ -43,26 +43,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfileData = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('must_change_password, name')
+      .select('must_change_password, name, is_active')
       .eq('user_id', userId)
       .single();
     
     return {
       mustChangePassword: data?.must_change_password ?? false,
-      name: data?.name ?? null
+      name: data?.name ?? null,
+      isActive: data?.is_active ?? true
     };
+  };
+
+  const checkAndSignOutIfInactive = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (data && data.is_active === false) {
+      await supabase.auth.signOut();
+      return true; // User was inactive and signed out
+    }
+    return false; // User is active
   };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer role and profile data fetching with setTimeout
+        // Defer all async operations with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(async () => {
+            // Check if user is active FIRST - if not, sign them out immediately
+            const isInactive = await checkAndSignOutIfInactive(session.user.id);
+            if (isInactive) {
+              setSession(null);
+              setUser(null);
+              setRole(null);
+              setUserName(null);
+              setMustChangePassword(false);
+              setLoading(false);
+              return;
+            }
+
+            // User is active, proceed with fetching data
+            setSession(session);
+            setUser(session.user);
+            
             const [userRole, profileData] = await Promise.all([
               fetchUserRole(session.user.id),
               fetchProfileData(session.user.id)
@@ -73,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
           }, 0);
         } else {
+          setSession(null);
+          setUser(null);
           setRole(null);
           setUserName(null);
           setMustChangePassword(false);
@@ -82,20 +112,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        Promise.all([
+        // Check if user is active FIRST
+        const isInactive = await checkAndSignOutIfInactive(session.user.id);
+        if (isInactive) {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setUserName(null);
+          setMustChangePassword(false);
+          setLoading(false);
+          return;
+        }
+
+        setSession(session);
+        setUser(session.user);
+        
+        const [userRole, profileData] = await Promise.all([
           fetchUserRole(session.user.id),
           fetchProfileData(session.user.id)
-        ]).then(([userRole, profileData]) => {
-          setRole(userRole);
-          setUserName(profileData.name);
-          setMustChangePassword(profileData.mustChangePassword);
-          setLoading(false);
-        });
+        ]);
+        setRole(userRole);
+        setUserName(profileData.name);
+        setMustChangePassword(profileData.mustChangePassword);
+        setLoading(false);
       } else {
         setLoading(false);
       }
