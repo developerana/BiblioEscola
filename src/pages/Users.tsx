@@ -203,123 +203,168 @@ export default function Users() {
       />
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle>Usuários Cadastrados</CardTitle>
-              <CardDescription>
-                Lista de todos os usuários com acesso ao sistema
-              </CardDescription>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-card/95">
+          <CardHeader className="bg-gradient-to-r from-primary/5 via-transparent to-accent/5 border-b border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <UsersIcon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl font-display">Usuários Cadastrados</CardTitle>
+                </div>
+                <CardDescription className="ml-12">
+                  {users.length} {users.length === 1 ? 'usuário registrado' : 'usuários registrados'} no sistema
+                </CardDescription>
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 w-full sm:w-auto bg-gradient-primary hover:opacity-90 shadow-md">
+                    <UserPlus className="h-4 w-4" />
+                    Novo Usuário
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
+                    <DialogDescription>
+                      Uma senha temporária segura será gerada automaticamente.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome</Label>
+                      <Input
+                        id="name"
+                        placeholder="Nome do usuário"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Tipo de Usuário *</Label>
+                      <Select 
+                        value={formData.role} 
+                        onValueChange={(value: 'bibliotecario' | 'user') => setFormData({ ...formData, role: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bibliotecario">
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">Bibliotecário</span>
+                              <span className="text-xs text-muted-foreground">Pode cadastrar, editar e excluir livros</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="user">
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">Usuário</span>
+                              <span className="text-xs text-muted-foreground">Apenas empréstimos e devoluções</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 w-full sm:w-auto">
-                  <UserPlus className="h-4 w-4" />
-                  Novo Usuário
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
-                  <DialogDescription>
-                    Uma senha temporária segura será gerada automaticamente.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome</Label>
-                    <Input
-                      id="name"
-                      placeholder="Nome do usuário"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Tipo de Usuário *</Label>
-                    <Select 
-                      value={formData.role} 
-                      onValueChange={(value: 'bibliotecario' | 'user') => setFormData({ ...formData, role: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bibliotecario">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Bibliotecário</span>
-                            <span className="text-xs text-muted-foreground">Pode cadastrar, editar e excluir livros</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="user">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Usuário</span>
-                            <span className="text-xs text-muted-foreground">Apenas empréstimos e devoluções</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Cadastrando...' : 'Cadastrar'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {users.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <UsersIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum usuário cadastrado ainda.</p>
+              <div className="text-center py-16 text-muted-foreground">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                  <UsersIcon className="h-10 w-10 opacity-40" />
+                </div>
+                <p className="text-lg font-medium">Nenhum usuário cadastrado</p>
+                <p className="text-sm mt-1">Clique em "Novo Usuário" para começar</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">Data de Cadastro</TableHead>
-                      <TableHead className="w-[70px]">Ações</TableHead>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+                      <TableHead className="font-semibold text-foreground/80">Nome</TableHead>
+                      <TableHead className="font-semibold text-foreground/80">Email</TableHead>
+                      <TableHead className="font-semibold text-foreground/80">Tipo</TableHead>
+                      <TableHead className="font-semibold text-foreground/80">Status</TableHead>
+                      <TableHead className="hidden sm:table-cell font-semibold text-foreground/80">Cadastro</TableHead>
+                      <TableHead className="w-[70px] font-semibold text-foreground/80">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((userItem) => (
-                      <TableRow key={userItem.id} className={!userItem.is_active ? 'opacity-60' : ''}>
-                        <TableCell className="font-medium">
-                          {userItem.name || '-'}
+                    {users.map((userItem, index) => (
+                      <TableRow 
+                        key={userItem.id} 
+                        className={`
+                          transition-all duration-200 
+                          hover:bg-primary/5 
+                          ${!userItem.is_active ? 'opacity-50 bg-muted/20' : ''} 
+                          ${index % 2 === 0 ? 'bg-transparent' : 'bg-muted/10'}
+                        `}
+                      >
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`
+                              w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold
+                              ${userItem.role === 'admin' 
+                                ? 'bg-primary/15 text-primary' 
+                                : userItem.role === 'bibliotecario' 
+                                  ? 'bg-accent/15 text-accent-foreground' 
+                                  : 'bg-muted text-muted-foreground'}
+                            `}>
+                              {(userItem.name || userItem.email).charAt(0).toUpperCase()}
+                            </div>
+                            <span className="font-medium">{userItem.name || '-'}</span>
+                          </div>
                         </TableCell>
-                        <TableCell className="max-w-[150px] truncate">{userItem.email}</TableCell>
+                        <TableCell className="text-muted-foreground max-w-[180px]">
+                          <span className="truncate block">{userItem.email}</span>
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={userItem.role === 'admin' ? 'default' : userItem.role === 'bibliotecario' ? 'outline' : 'secondary'}>
+                          <Badge 
+                            variant={userItem.role === 'admin' ? 'default' : 'outline'}
+                            className={`
+                              font-medium
+                              ${userItem.role === 'admin' 
+                                ? 'bg-primary/90 hover:bg-primary' 
+                                : userItem.role === 'bibliotecario' 
+                                  ? 'border-accent/50 text-accent-foreground bg-accent/10' 
+                                  : 'border-muted-foreground/30'}
+                            `}
+                          >
                             {ROLE_LABELS[userItem.role || 'user']}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={userItem.is_active ? 'outline' : 'destructive'}>
-                            {userItem.is_active ? 'Ativo' : 'Inativo'}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${userItem.is_active ? 'bg-green-500' : 'bg-destructive'}`} />
+                            <span className={`text-sm ${userItem.is_active ? 'text-green-600 dark:text-green-400' : 'text-destructive'}`}>
+                              {userItem.is_active ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">
+                        <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
                           {new Date(userItem.created_at).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell>
@@ -329,16 +374,17 @@ export default function Users() {
                                 <Button 
                                   variant="ghost" 
                                   size="icon"
+                                  className="h-8 w-8 hover:bg-muted"
                                   disabled={actionLoading === userItem.user_id}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" className="w-40">
                                 {userItem.is_active ? (
                                   <DropdownMenuItem
                                     onClick={() => handleUserAction(userItem.user_id, 'deactivate')}
-                                    className="text-warning"
+                                    className="text-amber-600 dark:text-amber-400 focus:text-amber-600 dark:focus:text-amber-400"
                                   >
                                     <UserX className="h-4 w-4 mr-2" />
                                     Desativar
@@ -346,7 +392,7 @@ export default function Users() {
                                 ) : (
                                   <DropdownMenuItem
                                     onClick={() => handleUserAction(userItem.user_id, 'activate')}
-                                    className="text-success"
+                                    className="text-green-600 dark:text-green-400 focus:text-green-600 dark:focus:text-green-400"
                                   >
                                     <UserCheck className="h-4 w-4 mr-2" />
                                     Ativar
@@ -354,7 +400,7 @@ export default function Users() {
                                 )}
                                 <DropdownMenuItem
                                   onClick={() => setDeleteConfirm(userItem)}
-                                  className="text-destructive"
+                                  className="text-destructive focus:text-destructive"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Excluir
