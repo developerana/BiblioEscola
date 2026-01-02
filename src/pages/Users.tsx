@@ -30,7 +30,7 @@ interface UserProfile {
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   bibliotecario: 'Bibliotecário',
-  user: 'Usuário',
+  user: 'Usuário Comum',
 };
 
 export default function Users() {
