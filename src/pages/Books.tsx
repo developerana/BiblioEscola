@@ -32,7 +32,7 @@ const ITEMS_PER_PAGE = 30;
 
 export default function Books() {
   const { books, searchBooks, addBook, updateBook, deleteBook, loading } = useLibrary();
-  const { canManageBooks } = useAuth();
+  const { canManageBooks, isAdmin } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'borrowed'>('all');
@@ -483,6 +483,7 @@ export default function Books() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
+        isAdmin={isAdmin}
       />
     </MainLayout>
   );
