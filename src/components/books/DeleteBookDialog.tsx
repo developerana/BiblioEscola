@@ -19,9 +19,10 @@ interface DeleteBookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (book: Book) => void;
+  isAdmin?: boolean;
 }
 
-export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: DeleteBookDialogProps) {
+export function DeleteBookDialog({ book, open, onOpenChange, onConfirm, isAdmin = false }: DeleteBookDialogProps) {
   const [bookNameInput, setBookNameInput] = useState('');
   const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
 
@@ -34,7 +35,7 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
 
   const isBookNameValid = book && bookNameInput.trim().toLowerCase() === book.title.trim().toLowerCase();
   const isDeleteConfirmValid = deleteConfirmInput.trim().toLowerCase() === 'deletar';
-  const canDelete = isBookNameValid && isDeleteConfirmValid;
+  const canDelete = isAdmin || (isBookNameValid && isDeleteConfirmValid);
 
   const handleConfirm = () => {
     if (canDelete && book) {
@@ -70,37 +71,47 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm }: Delete
             <p className="text-sm font-semibold mt-1">"{book.title}"</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="book-name">
-              Digite o nome do livro para confirmar:
-            </Label>
-            <Input
-              id="book-name"
-              value={bookNameInput}
-              onChange={(e) => setBookNameInput(e.target.value)}
-              placeholder={book.title}
-              className={bookNameInput && !isBookNameValid ? 'border-destructive' : ''}
-            />
-            {bookNameInput && !isBookNameValid && (
-              <p className="text-xs text-destructive">O nome do livro não corresponde</p>
-            )}
-          </div>
+          {!isAdmin && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="book-name">
+                  Digite o nome do livro para confirmar:
+                </Label>
+                <Input
+                  id="book-name"
+                  value={bookNameInput}
+                  onChange={(e) => setBookNameInput(e.target.value)}
+                  placeholder={book.title}
+                  className={bookNameInput && !isBookNameValid ? 'border-destructive' : ''}
+                />
+                {bookNameInput && !isBookNameValid && (
+                  <p className="text-xs text-destructive">O nome do livro não corresponde</p>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="delete-confirm">
-              Digite <span className="font-semibold text-destructive">"Deletar"</span> para confirmar:
-            </Label>
-            <Input
-              id="delete-confirm"
-              value={deleteConfirmInput}
-              onChange={(e) => setDeleteConfirmInput(e.target.value)}
-              placeholder="Deletar"
-              className={deleteConfirmInput && !isDeleteConfirmValid ? 'border-destructive' : ''}
-            />
-            {deleteConfirmInput && !isDeleteConfirmValid && (
-              <p className="text-xs text-destructive">Digite "Deletar" exatamente</p>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="delete-confirm">
+                  Digite <span className="font-semibold text-destructive">"Deletar"</span> para confirmar:
+                </Label>
+                <Input
+                  id="delete-confirm"
+                  value={deleteConfirmInput}
+                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                  placeholder="Deletar"
+                  className={deleteConfirmInput && !isDeleteConfirmValid ? 'border-destructive' : ''}
+                />
+                {deleteConfirmInput && !isDeleteConfirmValid && (
+                  <p className="text-xs text-destructive">Digite "Deletar" exatamente</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {isAdmin && (
+            <p className="text-sm text-muted-foreground">
+              Como administrador, você pode excluir este livro diretamente.
+            </p>
+          )}
         </div>
 
         <AlertDialogFooter>
