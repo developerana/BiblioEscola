@@ -9,7 +9,7 @@ export function Footer() {
           <span className="font-medium text-foreground">Ana Helouise</span>
         </p>
         <p className="text-xs">
-          © {new Date().getFullYear()} Sistema de Biblioteca
+          © {new Date().getFullYear()} BiblioEscola
         </p>
       </div>
     </footer>
