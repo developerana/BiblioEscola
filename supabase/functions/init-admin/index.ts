@@ -33,8 +33,12 @@ serve(async (req) => {
       .select("*")
       .eq("email", ADMIN_EMAIL);
 
+    const url = new URL(req.url);
+    const wantsReset = body.reset === true || url.searchParams.get("reset") === "1";
+    console.log("init-admin invoked", { wantsReset, hasProfile: !!(existingProfiles && existingProfiles.length) });
+
     if (existingProfiles && existingProfiles.length > 0) {
-      if (body.reset) {
+      if (wantsReset) {
         const { data: list } = await supabaseAdmin.auth.admin.listUsers();
         const adminUser = list?.users?.find((u) => u.email === ADMIN_EMAIL);
         if (!adminUser) throw new Error("Conta master não encontrada no Auth");
