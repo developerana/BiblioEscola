@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LibraryProvider } from "@/contexts/LibraryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -40,13 +41,13 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/livros" element={<Books />} />
-                <Route path="/emprestimos" element={<Loans />} />
-                <Route path="/devolucoes" element={<Returns />} />
-                <Route path="/historico" element={<History />} />
-                <Route path="/usuarios" element={<Users />} />
-                <Route path="/configuracoes" element={<Settings />} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/livros" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+                <Route path="/emprestimos" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
+                <Route path="/devolucoes" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
+                <Route path="/historico" element={<ProtectedRoute><History /></ProtectedRoute>} />
+                <Route path="/usuarios" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+                <Route path="/configuracoes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
