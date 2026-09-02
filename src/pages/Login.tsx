@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Library, Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,13 +18,15 @@ export default function Login() {
   const { signIn, user, loading } = useAuth();
   const { refreshData } = useLibrary();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const redirectTo = (location.state as { from?: string } | null)?.from || '/dashboard';
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/dashboard');
+      navigate(redirectTo, { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +62,7 @@ export default function Login() {
           title: 'Bem-vindo!',
           description: 'Login realizado com sucesso.',
         });
-        navigate('/dashboard');
+        navigate(redirectTo, { replace: true });
       }
     } catch {
       toast({
