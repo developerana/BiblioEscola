@@ -114,7 +114,7 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantidade</Label>
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(-1)} disabled={formData.total_quantity <= 1} aria-label="Diminuir quantidade">
+                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(-1)} disabled={(formData.total_quantity || 0) <= 1} aria-label="Diminuir quantidade">
                       <Minus className="h-4 w-4" />
                     </Button>
                     <Input
