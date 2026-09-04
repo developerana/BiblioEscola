@@ -37,10 +37,13 @@ export default function Dashboard() {
   });
 
   const changeQuantity = (delta: number) => {
-    setFormData(prev => ({
-      ...prev,
-      total_quantity: Math.min(9999, Math.max(1, prev.total_quantity + delta)),
-    }));
+    setFormData(prev => {
+      const current = typeof prev.total_quantity === 'number' ? prev.total_quantity : 1;
+      return {
+        ...prev,
+        total_quantity: Math.min(9999, Math.max(1, current + delta)),
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
