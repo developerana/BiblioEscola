@@ -113,7 +113,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         (payload) => {
           // Optimistic update for immediate UI response
           if (payload.eventType === 'INSERT') {
-            setBooks(prev => [payload.new as Book, ...prev]);
+            const newBook = payload.new as Book;
+            setBooks(prev => prev.some(b => b.id === newBook.id) ? prev : [newBook, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
             setBooks(prev => prev.map(book => 
               book.id === (payload.new as Book).id ? payload.new as Book : book
@@ -156,8 +157,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       console.error('Error adding book:', error);
       return false;
     }
-    
-    setBooks(prev => [data, ...prev]);
+
+    // Realtime INSERT will add the book; dedupe guard below avoids duplicates
+    setBooks(prev => prev.some(b => b.id === data.id) ? prev : [data, ...prev]);
     return true;
   }, []);
 
