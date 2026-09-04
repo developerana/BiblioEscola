@@ -24,7 +24,12 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.actual_return_date!).getTime() - new Date(a.actual_return_date!).getTime())
     .slice(0, 5);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    author: string;
+    publisher: string;
+    total_quantity: number | '';
+  }>({
     title: '',
     author: '',
     publisher: '',
@@ -32,10 +37,13 @@ export default function Dashboard() {
   });
 
   const changeQuantity = (delta: number) => {
-    setFormData(prev => ({
-      ...prev,
-      total_quantity: Math.min(9999, Math.max(1, prev.total_quantity + delta)),
-    }));
+    setFormData(prev => {
+      const current = typeof prev.total_quantity === 'number' ? prev.total_quantity : 1;
+      return {
+        ...prev,
+        total_quantity: Math.min(9999, Math.max(1, current + delta)),
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,14 +52,15 @@ export default function Dashboard() {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
+    const quantity = typeof formData.total_quantity === 'number' ? formData.total_quantity : 1;
     setIsSubmitting(true);
     try {
       const success = await addBook({
         title: formData.title.trim(),
         author: formData.author.trim(),
         publisher: formData.publisher.trim() || null,
-        total_quantity: formData.total_quantity,
-        available_quantity: formData.total_quantity,
+        total_quantity: quantity,
+        available_quantity: quantity,
       });
       if (success) {
         toast.success('Livro cadastrado com sucesso!');
@@ -105,7 +114,7 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantidade</Label>
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(-1)} disabled={formData.total_quantity <= 1} aria-label="Diminuir quantidade">
+                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(-1)} disabled={(formData.total_quantity || 0) <= 1} aria-label="Diminuir quantidade">
                       <Minus className="h-4 w-4" />
                     </Button>
                     <Input
@@ -116,11 +125,21 @@ export default function Dashboard() {
                       className="text-center font-semibold"
                       value={formData.total_quantity}
                       onChange={e => {
-                        const val = parseInt(e.target.value.replace(/\D/g, '')) || 1;
-                        setFormData(prev => ({ ...prev, total_quantity: Math.min(9999, Math.max(1, val)) }));
+                        const raw = e.target.value.replace(/\D/g, '');
+                        if (raw === '') {
+                          setFormData(prev => ({ ...prev, total_quantity: '' }));
+                          return;
+                        }
+                        const val = Math.min(9999, Math.max(1, parseInt(raw, 10)));
+                        setFormData(prev => ({ ...prev, total_quantity: val }));
+                      }}
+                      onBlur={() => {
+                        if (formData.total_quantity === '') {
+                          setFormData(prev => ({ ...prev, total_quantity: 1 }));
+                        }
                       }}
                     />
-                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(1)} disabled={formData.total_quantity >= 9999} aria-label="Aumentar quantidade">
+                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(1)} disabled={(formData.total_quantity || 0) >= 9999} aria-label="Aumentar quantidade">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
