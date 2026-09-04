@@ -139,7 +139,7 @@ export default function Dashboard() {
                         }
                       }}
                     />
-                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(1)} disabled={formData.total_quantity >= 9999} aria-label="Aumentar quantidade">
+                    <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(1)} disabled={(formData.total_quantity || 0) >= 9999} aria-label="Aumentar quantidade">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
