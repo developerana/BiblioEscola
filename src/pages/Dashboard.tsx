@@ -124,8 +124,18 @@ export default function Dashboard() {
                       className="text-center font-semibold"
                       value={formData.total_quantity}
                       onChange={e => {
-                        const val = parseInt(e.target.value.replace(/\D/g, '')) || 1;
-                        setFormData(prev => ({ ...prev, total_quantity: Math.min(9999, Math.max(1, val)) }));
+                        const raw = e.target.value.replace(/\D/g, '');
+                        if (raw === '') {
+                          setFormData(prev => ({ ...prev, total_quantity: '' }));
+                          return;
+                        }
+                        const val = Math.min(9999, Math.max(1, parseInt(raw, 10)));
+                        setFormData(prev => ({ ...prev, total_quantity: val }));
+                      }}
+                      onBlur={() => {
+                        if (formData.total_quantity === '') {
+                          setFormData(prev => ({ ...prev, total_quantity: 1 }));
+                        }
                       }}
                     />
                     <Button type="button" variant="outline" size="icon" onClick={() => changeQuantity(1)} disabled={formData.total_quantity >= 9999} aria-label="Aumentar quantidade">
