@@ -52,14 +52,15 @@ export default function Dashboard() {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
+    const quantity = typeof formData.total_quantity === 'number' ? formData.total_quantity : 1;
     setIsSubmitting(true);
     try {
       const success = await addBook({
         title: formData.title.trim(),
         author: formData.author.trim(),
         publisher: formData.publisher.trim() || null,
-        total_quantity: formData.total_quantity,
-        available_quantity: formData.total_quantity,
+        total_quantity: quantity,
+        available_quantity: quantity,
       });
       if (success) {
         toast.success('Livro cadastrado com sucesso!');
