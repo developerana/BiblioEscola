@@ -24,7 +24,12 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.actual_return_date!).getTime() - new Date(a.actual_return_date!).getTime())
     .slice(0, 5);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    author: string;
+    publisher: string;
+    total_quantity: number | '';
+  }>({
     title: '',
     author: '',
     publisher: '',
