@@ -214,7 +214,7 @@ export default function Dashboard() {
             ) : recentReturns.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma devolução registrada ainda.</p>
             ) : (
-              <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                 {recentReturns.map(loan => (
                   <div key={loan.id} className="p-4 rounded-lg bg-muted/50 border border-border">
                     <div className="flex items-start justify-between gap-2 mb-2">
