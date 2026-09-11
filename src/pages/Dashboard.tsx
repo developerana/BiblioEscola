@@ -199,7 +199,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Recent Returns */}
-        <Card className="shadow-card lg:col-span-3">
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display text-xl flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-primary" />
