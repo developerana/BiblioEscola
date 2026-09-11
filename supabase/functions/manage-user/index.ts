@@ -227,7 +227,11 @@ serve(async (req) => {
         }
       }
 
-      const roleLabel = newRole === "bibliotecario" ? "Bibliotecário" : "Usuário";
+      const roleLabel = newRole === "admin"
+        ? "Administrador"
+        : newRole === "bibliotecario"
+          ? "Bibliotecário"
+          : "Usuário Comum";
       console.log("User role changed successfully to:", newRole);
 
       return new Response(
