@@ -71,11 +71,27 @@ serve(async (req) => {
     }
 
     // Validate newRole if action is change_role
-    if (action === "change_role" && (!newRole || !["bibliotecario", "user"].includes(newRole))) {
+    if (action === "change_role" && (!newRole || !["admin", "bibliotecario", "user"].includes(newRole))) {
       return new Response(
-        JSON.stringify({ error: "newRole deve ser 'bibliotecario' ou 'user'" }),
+        JSON.stringify({ error: "newRole deve ser 'admin', 'bibliotecario' ou 'user'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Protect the master account from any modification
+    if (action !== "change_role" || true) {
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("email")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (targetProfile?.email === ADMIN_EMAIL) {
+        return new Response(
+          JSON.stringify({ error: "A conta master não pode ser modificada" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Prevent admin from modifying themselves
