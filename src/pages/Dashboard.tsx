@@ -154,8 +154,10 @@ export default function Dashboard() {
           </Card>
         )}
 
+        {/* Loans column: active loans with recent returns right below */}
+        <div className={`space-y-6 ${canManageBooks ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
         {/* Active Loans */}
-        <Card className={`shadow-card ${canManageBooks ? 'lg:col-span-2' : 'lg:col-span-3'} h-fit`}>
+        <Card className="shadow-card h-fit">
           <CardHeader>
             <CardTitle className="font-display text-xl flex items-center gap-2">
               <Clock className="h-5 w-5" />
