@@ -27,6 +27,8 @@ interface UserProfile {
   role?: 'admin' | 'bibliotecario' | 'user';
 }
 
+const MASTER_EMAIL = 'anahelouise.ss@gmail.com';
+
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   bibliotecario: 'Bibliotecário',
@@ -40,7 +42,7 @@ export default function Users() {
   const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
-  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'bibliotecario' | 'user' } | null>(null);
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'admin' | 'bibliotecario' | 'user' } | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
@@ -148,7 +150,7 @@ export default function Users() {
     }
   };
 
-  const handleUserAction = async (userId: string, action: 'activate' | 'deactivate' | 'delete' | 'change_role', newRole?: 'bibliotecario' | 'user') => {
+  const handleUserAction = async (userId: string, action: 'activate' | 'deactivate' | 'delete' | 'change_role', newRole?: 'admin' | 'bibliotecario' | 'user') => {
     setActionLoading(userId);
     
     try {
@@ -376,35 +378,26 @@ export default function Users() {
                           {new Date(userItem.created_at).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell>
-                          {userItem.role !== 'admin' && (
+                          {userItem.email !== MASTER_EMAIL && (
                             <div className="flex items-center gap-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-2.5 border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-200"
-                                    onClick={() => setRoleChangeConfirm({
-                                      user: userItem,
-                                      newRole: userItem.role === 'bibliotecario' ? 'user' : 'bibliotecario'
-                                    })}
-                                    disabled={actionLoading === userItem.user_id}
-                                  >
-                                    {actionLoading === userItem.user_id ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <RefreshCw className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    {userItem.role === 'bibliotecario' 
-                                      ? 'Alterar para Usuário comum' 
-                                      : 'Alterar para Bibliotecário'}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <Select
+                                value={userItem.role || 'user'}
+                                onValueChange={(value: 'admin' | 'bibliotecario' | 'user') => {
+                                  if (value !== userItem.role) {
+                                    setRoleChangeConfirm({ user: userItem, newRole: value });
+                                  }
+                                }}
+                                disabled={actionLoading === userItem.user_id}
+                              >
+                                <SelectTrigger className="h-8 w-[150px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">Administrador</SelectItem>
+                                  <SelectItem value="bibliotecario">Bibliotecário</SelectItem>
+                                  <SelectItem value="user">Usuário Comum</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   {userItem.is_active ? (
