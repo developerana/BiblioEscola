@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, Loader2, RefreshCw } from 'lucide-react';
+import { UserPlus, Users as UsersIcon, Trash2, UserX, UserCheck, Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -319,7 +319,7 @@ export default function Users() {
                       <TableHead className="font-semibold text-foreground/80">Tipo</TableHead>
                       <TableHead className="font-semibold text-foreground/80">Status</TableHead>
                       <TableHead className="hidden sm:table-cell font-semibold text-foreground/80">Cadastro</TableHead>
-                      <TableHead className="w-[70px] font-semibold text-foreground/80">Ações</TableHead>
+                      <TableHead className="min-w-[280px] font-semibold text-foreground/80">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
