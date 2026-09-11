@@ -154,8 +154,10 @@ export default function Dashboard() {
           </Card>
         )}
 
+        {/* Loans column: active loans with recent returns right below */}
+        <div className={`space-y-6 ${canManageBooks ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
         {/* Active Loans */}
-        <Card className={`shadow-card ${canManageBooks ? 'lg:col-span-2' : 'lg:col-span-3'} h-fit`}>
+        <Card className="shadow-card h-fit">
           <CardHeader>
             <CardTitle className="font-display text-xl flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -197,7 +199,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Recent Returns */}
-        <Card className="shadow-card lg:col-span-3">
+        <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display text-xl flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-primary" />
@@ -212,7 +214,7 @@ export default function Dashboard() {
             ) : recentReturns.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Nenhuma devolução registrada ainda.</p>
             ) : (
-              <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                 {recentReturns.map(loan => (
                   <div key={loan.id} className="p-4 rounded-lg bg-muted/50 border border-border">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -229,6 +231,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </MainLayout>
   );
