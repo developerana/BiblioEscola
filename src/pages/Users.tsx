@@ -24,7 +24,7 @@ interface UserProfile {
   name: string | null;
   created_at: string;
   is_active: boolean;
-  role?: 'admin' | 'bibliotecario' | 'user';
+  role?: 'admin' | 'bibliotecario';
 }
 
 const MASTER_EMAIL = 'anahelouise.ss@gmail.com';
@@ -32,17 +32,16 @@ const MASTER_EMAIL = 'anahelouise.ss@gmail.com';
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   bibliotecario: 'Bibliotecário',
-  user: 'Usuário Comum',
 };
 
 export default function Users() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
+  const [formData, setFormData] = useState({ email: '', name: '', role: 'bibliotecario' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
-  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'admin' | 'bibliotecario' | 'user' } | null>(null);
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'admin' | 'bibliotecario' } | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
@@ -89,7 +88,7 @@ export default function Users() {
         return {
           ...profile,
           is_active: profile.is_active ?? true,
-          role: roleData?.role as 'admin' | 'bibliotecario' | 'user' || 'user',
+          role: roleData?.role as 'admin' | 'bibliotecario' || 'bibliotecario',
         };
       })
     );
@@ -136,7 +135,7 @@ export default function Users() {
         description: `${formData.email} foi cadastrado como ${ROLE_LABELS[formData.role]}. A senha temporária foi gerada.`,
       });
 
-      setFormData({ email: '', name: '', role: 'user' });
+      setFormData({ email: '', name: '', role: 'bibliotecario' });
       setIsDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -266,7 +265,7 @@ export default function Users() {
                       <Label htmlFor="role">Tipo de Usuário *</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(value: 'bibliotecario' | 'user') => setFormData({ ...formData, role: value })}
+                        onValueChange={(value: 'bibliotecario') => setFormData({ ...formData, role: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -275,13 +274,7 @@ export default function Users() {
                           <SelectItem value="bibliotecario">
                             <div className="flex flex-col items-start">
                               <span className="font-medium">Bibliotecário</span>
-                              <span className="text-xs text-muted-foreground">Pode cadastrar, editar e excluir livros</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="user">
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">Usuário</span>
-                              <span className="text-xs text-muted-foreground">Apenas empréstimos e devoluções</span>
+                              <span className="text-xs text-muted-foreground">Pode cadastrar e editar livros, empréstimos e devoluções</span>
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -363,7 +356,7 @@ export default function Users() {
                                   : 'bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800'}
                             `}
                           >
-                            {ROLE_LABELS[userItem.role || 'user']}
+                            {ROLE_LABELS[userItem.role || 'bibliotecario']}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -381,8 +374,8 @@ export default function Users() {
                           {userItem.email !== MASTER_EMAIL && (
                             <div className="flex items-center gap-2">
                               <Select
-                                value={userItem.role || 'user'}
-                                onValueChange={(value: 'admin' | 'bibliotecario' | 'user') => {
+                                value={userItem.role || 'bibliotecario'}
+                                onValueChange={(value: 'admin' | 'bibliotecario') => {
                                   if (value !== userItem.role) {
                                     setRoleChangeConfirm({ user: userItem, newRole: value });
                                   }
@@ -395,7 +388,6 @@ export default function Users() {
                                 <SelectContent>
                                   <SelectItem value="admin">Administrador</SelectItem>
                                   <SelectItem value="bibliotecario">Bibliotecário</SelectItem>
-                                  <SelectItem value="user">Usuário Comum</SelectItem>
                                 </SelectContent>
                               </Select>
                               <Tooltip>
@@ -488,8 +480,8 @@ export default function Users() {
             <AlertDialogTitle>Confirmar alteração de função</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja alterar a função de <strong>{roleChangeConfirm?.user.name || roleChangeConfirm?.user.email}</strong> de{' '}
-              <strong>{ROLE_LABELS[roleChangeConfirm?.user.role || 'user']}</strong> para{' '}
-              <strong>{ROLE_LABELS[roleChangeConfirm?.newRole || 'user']}</strong>?
+              <strong>{ROLE_LABELS[roleChangeConfirm?.user.role || 'bibliotecario']}</strong> para{' '}
+              <strong>{ROLE_LABELS[roleChangeConfirm?.newRole || 'bibliotecario']}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

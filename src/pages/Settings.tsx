@@ -82,8 +82,7 @@ export default function Settings() {
     switch (role) {
       case 'admin': return 'Administrador';
       case 'bibliotecario': return 'Bibliotecário';
-      case 'user': return 'Usuário';
-      default: return 'Usuário';
+      default: return 'Bibliotecário';
     }
   };
 

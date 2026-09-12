@@ -71,9 +71,9 @@ serve(async (req) => {
     }
 
     // Validate newRole if action is change_role
-    if (action === "change_role" && (!newRole || !["admin", "bibliotecario", "user"].includes(newRole))) {
+    if (action === "change_role" && (!newRole || !["admin", "bibliotecario"].includes(newRole))) {
       return new Response(
-        JSON.stringify({ error: "newRole deve ser 'admin', 'bibliotecario' ou 'user'" }),
+        JSON.stringify({ error: "newRole deve ser 'admin' ou 'bibliotecario'" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
