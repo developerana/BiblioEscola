@@ -24,7 +24,7 @@ interface UserProfile {
   name: string | null;
   created_at: string;
   is_active: boolean;
-  role?: 'admin' | 'bibliotecario' | 'user';
+  role?: 'admin' | 'bibliotecario';
 }
 
 const MASTER_EMAIL = 'anahelouise.ss@gmail.com';
@@ -32,17 +32,16 @@ const MASTER_EMAIL = 'anahelouise.ss@gmail.com';
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   bibliotecario: 'Bibliotecário',
-  user: 'Usuário Comum',
 };
 
 export default function Users() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', name: '', role: 'user' as 'bibliotecario' | 'user' });
+  const [formData, setFormData] = useState({ email: '', name: '', role: 'bibliotecario' });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<UserProfile | null>(null);
-  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'admin' | 'bibliotecario' | 'user' } | null>(null);
+  const [roleChangeConfirm, setRoleChangeConfirm] = useState<{ user: UserProfile; newRole: 'admin' | 'bibliotecario' } | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin, user, loading } = useAuth();
@@ -89,7 +88,7 @@ export default function Users() {
         return {
           ...profile,
           is_active: profile.is_active ?? true,
-          role: roleData?.role as 'admin' | 'bibliotecario' | 'user' || 'user',
+          role: roleData?.role as 'admin' | 'bibliotecario' || 'bibliotecario',
         };
       })
     );
@@ -136,7 +135,7 @@ export default function Users() {
         description: `${formData.email} foi cadastrado como ${ROLE_LABELS[formData.role]}. A senha temporária foi gerada.`,
       });
 
-      setFormData({ email: '', name: '', role: 'user' });
+      setFormData({ email: '', name: '', role: 'bibliotecario' });
       setIsDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -266,7 +265,7 @@ export default function Users() {
                       <Label htmlFor="role">Tipo de Usuário *</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(value: 'bibliotecario' | 'user') => setFormData({ ...formData, role: value })}
+                        onValueChange={(value: 'bibliotecario') => setFormData({ ...formData, role: value })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -275,13 +274,7 @@ export default function Users() {
                           <SelectItem value="bibliotecario">
                             <div className="flex flex-col items-start">
                               <span className="font-medium">Bibliotecário</span>
-                              <span className="text-xs text-muted-foreground">Pode cadastrar, editar e excluir livros</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="user">
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium">Usuário</span>
-                              <span className="text-xs text-muted-foreground">Apenas empréstimos e devoluções</span>
+                              <span className="text-xs text-muted-foreground">Pode cadastrar e editar livros, empréstimos e devoluções</span>
                             </div>
                           </SelectItem>
                         </SelectContent>
