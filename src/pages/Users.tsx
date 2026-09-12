@@ -356,7 +356,7 @@ export default function Users() {
                                   : 'bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800'}
                             `}
                           >
-                            {ROLE_LABELS[userItem.role || 'user']}
+                            {ROLE_LABELS[userItem.role || 'bibliotecario']}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -374,8 +374,8 @@ export default function Users() {
                           {userItem.email !== MASTER_EMAIL && (
                             <div className="flex items-center gap-2">
                               <Select
-                                value={userItem.role || 'user'}
-                                onValueChange={(value: 'admin' | 'bibliotecario' | 'user') => {
+                                value={userItem.role || 'bibliotecario'}
+                                onValueChange={(value: 'admin' | 'bibliotecario') => {
                                   if (value !== userItem.role) {
                                     setRoleChangeConfirm({ user: userItem, newRole: value });
                                   }
@@ -388,7 +388,6 @@ export default function Users() {
                                 <SelectContent>
                                   <SelectItem value="admin">Administrador</SelectItem>
                                   <SelectItem value="bibliotecario">Bibliotecário</SelectItem>
-                                  <SelectItem value="user">Usuário Comum</SelectItem>
                                 </SelectContent>
                               </Select>
                               <Tooltip>
@@ -481,8 +480,8 @@ export default function Users() {
             <AlertDialogTitle>Confirmar alteração de função</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja alterar a função de <strong>{roleChangeConfirm?.user.name || roleChangeConfirm?.user.email}</strong> de{' '}
-              <strong>{ROLE_LABELS[roleChangeConfirm?.user.role || 'user']}</strong> para{' '}
-              <strong>{ROLE_LABELS[roleChangeConfirm?.newRole || 'user']}</strong>?
+              <strong>{ROLE_LABELS[roleChangeConfirm?.user.role || 'bibliotecario']}</strong> para{' '}
+              <strong>{ROLE_LABELS[roleChangeConfirm?.newRole || 'bibliotecario']}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
