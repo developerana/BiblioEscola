@@ -94,9 +94,9 @@ serve(async (req) => {
     // Generate secure random password server-side
     const generatedPassword = generateSecurePassword(16);
 
-    // Validate role - only allow 'user' or 'bibliotecario', never 'admin'
-    const validRoles = ['user', 'bibliotecario'];
-    const assignedRole = validRoles.includes(requestedRole) ? requestedRole : 'user';
+    // Validate role - only allow 'bibliotecario', never 'admin'
+    const validRoles = ['bibliotecario'];
+    const assignedRole = validRoles.includes(requestedRole) ? requestedRole : 'bibliotecario';
 
     // Create the new user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
