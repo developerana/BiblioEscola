@@ -112,12 +112,6 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm, isAdmin 
               </div>
             </>
           )}
-
-          {isAdmin && (
-            <p className="text-sm text-muted-foreground">
-              Como administrador, você pode excluir este livro diretamente.
-            </p>
-          )}
         </div>
 
         <AlertDialogFooter>
