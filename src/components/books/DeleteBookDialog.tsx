@@ -35,7 +35,7 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm, isAdmin 
 
   const isBookNameValid = book && bookNameInput.trim().toLowerCase() === book.title.trim().toLowerCase();
   const isDeleteConfirmValid = deleteConfirmInput.trim().toLowerCase() === 'deletar';
-  const canDelete = isAdmin || (isBookNameValid && isDeleteConfirmValid);
+  const canDelete = Boolean(isBookNameValid && isDeleteConfirmValid);
 
   const handleConfirm = () => {
     if (canDelete && book) {
@@ -71,7 +71,13 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm, isAdmin 
             <p className="text-sm font-semibold mt-1">"{book.title}"</p>
           </div>
 
-          {!isAdmin && (
+          {isAdmin && (
+            <p className="text-sm text-muted-foreground">
+              Mesmo como administrador, confirme os dois campos abaixo para evitar exclusões acidentais.
+            </p>
+          )}
+
+          {(
             <>
               <div className="space-y-2">
                 <Label htmlFor="book-name">
@@ -105,12 +111,6 @@ export function DeleteBookDialog({ book, open, onOpenChange, onConfirm, isAdmin 
                 )}
               </div>
             </>
-          )}
-
-          {isAdmin && (
-            <p className="text-sm text-muted-foreground">
-              Como administrador, você pode excluir este livro diretamente.
-            </p>
           )}
         </div>
 
