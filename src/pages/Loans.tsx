@@ -232,7 +232,9 @@ export default function Loans() {
                   <div className="rounded-lg border border-border bg-muted/30 p-4">
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Livro Selecionado</h4>
                     <p className="font-display text-lg font-semibold">{selectedBookData.title}</p>
-                    <p className="text-muted-foreground">{selectedBookData.author}</p>
+                    <p className="text-muted-foreground">
+                      {selectedBookData.author}{selectedBookData.publisher ? ` · ${selectedBookData.publisher}` : ''}
+                    </p>
                     <div className="mt-2 flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground">Disponíveis:</span>
                       <span className="font-medium text-success">{selectedBookData.available_quantity}</span>
