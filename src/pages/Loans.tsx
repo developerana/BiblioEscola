@@ -138,7 +138,7 @@ export default function Loans() {
                             <CommandItem
                               key={book.id}
                               value={`${book.title} ${book.author}`}
-                              className="data-[selected='true']:bg-transparent data-[selected='true']:text-foreground hover:bg-accent hover:text-accent-foreground"
+                              className="data-[selected='true']:bg-accent data-[selected='true']:text-accent-foreground"
                               onSelect={() => {
                                 setSelectedBook(book.id);
                                 setBookSelectOpen(false);
