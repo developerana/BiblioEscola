@@ -29,7 +29,7 @@ export default function Loans() {
   const [selectedBook, setSelectedBook] = useState('');
   const [studentName, setStudentName] = useState('');
   const [studentClass, setStudentClass] = useState('');
-  const [loanDays, setLoanDays] = useState(14);
+  const [loanDays, setLoanDays] = useState(15);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookSelectOpen, setBookSelectOpen] = useState(false);
 
