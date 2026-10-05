@@ -4,13 +4,18 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -27,6 +32,7 @@ export default function Loans() {
   const [studentClass, setStudentClass] = useState('');
   const [loanDays, setLoanDays] = useState(14);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookSelectOpen, setBookSelectOpen] = useState(false);
 
   const availableBooks = books.filter(book => book.available_quantity > 0);
 
