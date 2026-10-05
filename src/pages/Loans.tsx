@@ -110,24 +110,55 @@ export default function Loans() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="book">Livro</Label>
-                <Select value={selectedBook} onValueChange={setSelectedBook}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um livro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableBooks.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        Nenhum livro disponível
-                      </SelectItem>
-                    ) : (
-                      availableBooks.map((book) => (
-                        <SelectItem key={book.id} value={book.id}>
-                          {book.title} ({book.available_quantity} disp.)
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={bookSelectOpen} onOpenChange={setBookSelectOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="book"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={bookSelectOpen}
+                      className="w-full h-11 justify-between font-normal"
+                    >
+                      {selectedBookData
+                        ? selectedBookData.title
+                        : 'Selecione um livro'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                    <Command>
+                      <CommandInput placeholder="Digite o nome do livro..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum livro encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {availableBooks.map((book) => (
+                            <CommandItem
+                              key={book.id}
+                              value={`${book.title} ${book.author}`}
+                              onSelect={() => {
+                                setSelectedBook(book.id);
+                                setBookSelectOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedBook === book.id ? 'opacity-100' : 'opacity-0'
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{book.title}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {book.author} · {book.available_quantity} disp.
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
