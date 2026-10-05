@@ -327,10 +327,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     let filtered = books;
 
     if (query) {
-      const lowerQuery = query.toLowerCase();
-      filtered = filtered.filter(book => 
-        book.title.toLowerCase().includes(lowerQuery) ||
-        book.author.toLowerCase().includes(lowerQuery)
+      filtered = filtered.filter(book =>
+        textMatches(book.title, query) ||
+        textMatches(book.author, query) ||
+        textMatches(book.publisher, query)
       );
     }
 

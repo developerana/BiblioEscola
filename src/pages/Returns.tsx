@@ -40,9 +40,9 @@ export default function Returns() {
 
   const filteredLoans = activeLoans
     .filter(loan =>
-      loan.book?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.student_class.toLowerCase().includes(searchQuery.toLowerCase())
+      textMatches(loan.book?.title, searchQuery) ||
+      textMatches(loan.student_name, searchQuery) ||
+      textMatches(loan.student_class, searchQuery)
     )
     .sort((a, b) => {
       const dateA = parseISO(a.loan_date).getTime();
