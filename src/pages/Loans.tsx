@@ -148,7 +148,7 @@ export default function Loans() {
                               <div className="flex flex-col">
                                 <span>{book.title}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {book.author} · {book.available_quantity} disp.
+                                  {book.author} · {book.publisher} · {book.available_quantity} disp.
                                 </span>
                               </div>
                             </CommandItem>
