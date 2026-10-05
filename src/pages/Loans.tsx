@@ -14,7 +14,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { ChevronsUpDown, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, normalizeText } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -62,7 +62,7 @@ export default function Loans() {
         setSelectedBook('');
         setStudentName('');
         setStudentClass('');
-        setLoanDays(14);
+        setLoanDays(15);
       } else {
         toast({
           title: 'Erro ao registrar empréstimo',
@@ -125,7 +125,11 @@ export default function Loans() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-                    <Command>
+                    <Command
+                      filter={(value, search) =>
+                        normalizeText(value).includes(normalizeText(search)) ? 1 : 0
+                      }
+                    >
                       <CommandInput placeholder="Digite o nome do livro..." />
                       <CommandList>
                         <CommandEmpty>Nenhum livro encontrado.</CommandEmpty>
@@ -134,6 +138,7 @@ export default function Loans() {
                             <CommandItem
                               key={book.id}
                               value={`${book.title} ${book.author}`}
+                              className="data-[selected='true']:bg-transparent data-[selected='true']:text-foreground hover:bg-accent hover:text-accent-foreground"
                               onSelect={() => {
                                 setSelectedBook(book.id);
                                 setBookSelectOpen(false);
