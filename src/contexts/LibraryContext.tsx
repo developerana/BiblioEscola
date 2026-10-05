@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
 import { Book, Loan, DashboardStats } from '@/types/library';
 import { supabase } from '@/integrations/supabase/client';
+import { textMatches } from '@/lib/utils';
 import { format, addDays, isBefore, parseISO } from 'date-fns';
 
 interface LibraryContextType {
