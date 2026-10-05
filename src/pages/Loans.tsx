@@ -4,13 +4,17 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -27,6 +31,7 @@ export default function Loans() {
   const [studentClass, setStudentClass] = useState('');
   const [loanDays, setLoanDays] = useState(14);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookSelectOpen, setBookSelectOpen] = useState(false);
 
   const availableBooks = books.filter(book => book.available_quantity > 0);
 
@@ -104,24 +109,55 @@ export default function Loans() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="book">Livro</Label>
-                <Select value={selectedBook} onValueChange={setSelectedBook}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um livro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableBooks.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        Nenhum livro disponível
-                      </SelectItem>
-                    ) : (
-                      availableBooks.map((book) => (
-                        <SelectItem key={book.id} value={book.id}>
-                          {book.title} ({book.available_quantity} disp.)
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={bookSelectOpen} onOpenChange={setBookSelectOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="book"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={bookSelectOpen}
+                      className="w-full h-11 justify-between font-normal"
+                    >
+                      {selectedBookData
+                        ? selectedBookData.title
+                        : 'Selecione um livro'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                    <Command>
+                      <CommandInput placeholder="Digite o nome do livro..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum livro encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {availableBooks.map((book) => (
+                            <CommandItem
+                              key={book.id}
+                              value={`${book.title} ${book.author}`}
+                              onSelect={() => {
+                                setSelectedBook(book.id);
+                                setBookSelectOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  selectedBook === book.id ? 'opacity-100' : 'opacity-0'
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{book.title}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {book.author} · {book.available_quantity} disp.
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
