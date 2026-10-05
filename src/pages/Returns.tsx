@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useLibrary } from '@/contexts/LibraryContext';
+import { textMatches } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 
