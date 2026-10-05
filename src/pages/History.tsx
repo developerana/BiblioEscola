@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLibrary } from '@/contexts/LibraryContext';
+import { textMatches } from '@/lib/utils';
 import { format, parseISO, isBefore } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -46,10 +47,10 @@ export default function History() {
   }, [allLoans]);
 
   const filteredLoans = allLoans.filter(loan => {
-    const matchesSearch = 
-      loan.book?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.student_class.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      textMatches(loan.book?.title, searchQuery) ||
+      textMatches(loan.student_name, searchQuery) ||
+      textMatches(loan.student_class, searchQuery);
 
     if (!matchesSearch) return false;
 

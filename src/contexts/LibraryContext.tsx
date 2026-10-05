@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
 import { Book, Loan, DashboardStats } from '@/types/library';
 import { supabase } from '@/integrations/supabase/client';
+import { textMatches } from '@/lib/utils';
 import { format, addDays, isBefore, parseISO } from 'date-fns';
 
 interface LibraryContextType {
@@ -327,10 +328,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     let filtered = books;
 
     if (query) {
-      const lowerQuery = query.toLowerCase();
-      filtered = filtered.filter(book => 
-        book.title.toLowerCase().includes(lowerQuery) ||
-        book.author.toLowerCase().includes(lowerQuery)
+      filtered = filtered.filter(book =>
+        textMatches(book.title, query) ||
+        textMatches(book.author, query) ||
+        textMatches(book.publisher, query)
       );
     }
 
