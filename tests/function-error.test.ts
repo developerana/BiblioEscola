@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { getFunctionErrorMessage } from './function-error';
+import { getFunctionErrorMessage } from '../src/lib/function-error';
 
 describe('getFunctionErrorMessage', () => {
   it('preserves the application response for non-success HTTP errors', async () => {
