@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getFunctionErrorMessage } from '@/lib/function-error';
 import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
@@ -99,7 +100,9 @@ export default function Users() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email) {
+    if (isLoading) return;
+
+    if (!formData.email.trim()) {
       toast({
         title: 'Campo obrigatório',
         description: 'O email é obrigatório.',
@@ -113,7 +116,7 @@ export default function Users() {
     try {
       const { data, error } = await supabase.functions.invoke('register-user', {
         body: {
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           name: formData.name,
           role: formData.role,
         },
@@ -138,10 +141,10 @@ export default function Users() {
       setFormData({ email: '', name: '', role: 'bibliotecario' });
       setIsDialogOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao cadastrar',
-        description: error.message || 'Ocorreu um erro ao cadastrar o usuário.',
+        description: await getFunctionErrorMessage(error, 'Não foi possível cadastrar o usuário. Tente novamente.'),
         variant: 'destructive',
       });
     } finally {
@@ -181,10 +184,10 @@ export default function Users() {
       });
 
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao processar a ação.',
+        description: await getFunctionErrorMessage(error, 'Não foi possível processar a ação. Tente novamente.'),
         variant: 'destructive',
       });
     } finally {
