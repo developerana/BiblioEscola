@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792629458637,
+      "tag": "0000_enable_pg_cron",
+      "breakpoints": true
+    }
+  ]
+}
